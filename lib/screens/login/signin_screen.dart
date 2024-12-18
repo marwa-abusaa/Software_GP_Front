@@ -1,10 +1,12 @@
 import 'dart:convert';
-
+import 'package:flutter_application_1/api/notification_services.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/api/api.dart';
 import 'package:flutter_application_1/config.dart';
+import 'package:flutter_application_1/screens/supervisors/supervisor_home_screen.dart';
 import 'package:flutter_application_1/screens/users/home_screen.dart';
-import 'package:flutter_application_1/widgets/custom_home.dart';
-import 'package:flutter_application_1/widgets/custom_supervisor_home.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:flutter_application_1/screens/login/signup_screen.dart';
 import 'package:flutter_application_1/widgets/custom_scaffold.dart';
@@ -12,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:flutter_application_1/screens/login/forget_password.dart';
-import '../../theme/theme.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -22,9 +23,10 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  final _auth = FirebaseAuth.instance;
   final _formSignInKey = GlobalKey<FormState>();
   bool rememberPassword = true;
-   bool isPasswordVisible = false; // Track password visibility
+  bool isPasswordVisible = false; // Track password visibility
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   late SharedPreferences prefs;
@@ -33,6 +35,9 @@ class _SignInScreenState extends State<SignInScreen> {
   void initState() {
     super.initState();
     initSharedPref();
+    print(APIS.user?.email);
+    _clearFirebaseAuth(); // Ensure no old user is signed in
+    print(APIS.user?.email);
   }
 
   void initSharedPref() async {
@@ -54,20 +59,40 @@ class _SignInScreenState extends State<SignInScreen> {
         );
         // Handle response based on status code
         if (response.statusCode == 200) {
+          try {
+            final user = await _auth.signInWithEmailAndPassword(
+                email: emailController.text, password: passwordController.text);
+
+            APIS.initializeEmail(emailController.text);
+          } catch (e) {
+            print(e);
+          }
           // Successful login
           var jsonResponse = jsonDecode(response.body);
           var myToken = jsonResponse['token'];
+          TOKEN = myToken;
           var role = jsonResponse['role'];
+          ROLE = role;
           prefs.setString('token', myToken);
           if (role == "user") {
+            await NotificationService.subscribeToTopic();
+
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) =>  CustomHomePage(token: myToken,)),
+              MaterialPageRoute(
+                  builder: (context) => HomeScreen(
+                        token: myToken,
+                      )),
             );
+            // CompetitionsScreen();
+            // HomeScreen();
           } else if (role == "supervisor") {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CustomSupervisorHomePage(token: myToken,)),
+              MaterialPageRoute(
+                  builder: (context) => SupervisorHomeScreen(
+                        token: myToken,
+                      )),
             );
           }
           // add another else for the admin ...
@@ -81,6 +106,11 @@ class _SignInScreenState extends State<SignInScreen> {
           var jsonResponse = jsonDecode(response.body);
           showErrorSnackbar(
               jsonResponse['error'] ?? 'Invalid email or password');
+        } else if (response.statusCode == 403) {
+          // Forbidden - Special message for supervisors whose request hasn't been accepted
+          var jsonResponse = jsonDecode(response.body);
+          showErrorSnackbar(jsonResponse['error'] ??
+              'The admin still has not accepted your request for being a supervisor in TinyTales');
         } else if (response.statusCode == 404) {
           // Not Found
           var jsonResponse = jsonDecode(response.body);
@@ -121,7 +151,7 @@ class _SignInScreenState extends State<SignInScreen> {
           children: [
             const Expanded(
               flex: 1,
-              child: SizedBox(                     
+              child: SizedBox(
                 height: 10,
               ),
             ),
@@ -213,22 +243,18 @@ class _SignInScreenState extends State<SignInScreen> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             suffixIcon: IconButton(
-                                 icon: Icon(
-                                    isPasswordVisible
+                              icon: Icon(
+                                isPasswordVisible
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                    color: ourPink,
-                                 ),
+                                color: ourPink,
+                              ),
                               onPressed: () {
                                 setState(() {
                                   isPasswordVisible = !isPasswordVisible;
                                 });
                               },
-      
                             ),
-      
-      
-      
                           ),
                         ),
                         const SizedBox(
@@ -262,7 +288,9 @@ class _SignInScreenState extends State<SignInScreen> {
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const ForgotPassword()), // Navigates to the ForgotPassword page
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ForgotPassword()), // Navigates to the ForgotPassword page
                                 );
                               },
                               child: const Text(
@@ -274,7 +302,6 @@ class _SignInScreenState extends State<SignInScreen> {
                                 ),
                               ),
                             ),
-      
                           ],
                         ),
                         const SizedBox(
@@ -282,8 +309,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton( 
-                            style: ElevatedButton.styleFrom(backgroundColor: ourPink),                    
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: ourPink),
                             onPressed: () {
                               if (_formSignInKey.currentState!.validate() &&
                                   rememberPassword) {
@@ -393,5 +421,14 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
       ),
     );
+  }
+}
+
+void _clearFirebaseAuth() async {
+  try {
+    await APIS.auth.signOut(); // Sign out any previously signed-in user
+    print("Successfully signed out from Firebase Authentication.");
+  } catch (e) {
+    print("Error signing out: $e");
   }
 }

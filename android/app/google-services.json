@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "438832220197",
+    "project_id": "tiny-tales-1dc40",
+    "storage_bucket": "tiny-tales-1dc40.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:438832220197:android:23c7f00db8104ee3d717cc",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFHbYuFN8GK82-8X4W_ar5qZnuFpi3g6E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:438832220197:android:3728c839a10f1348d717cc",
+        "android_client_info": {
+          "package_name": "com.tintales.flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFHbYuFN8GK82-8X4W_ar5qZnuFpi3g6E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

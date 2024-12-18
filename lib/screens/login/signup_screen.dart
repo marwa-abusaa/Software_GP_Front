@@ -1,6 +1,9 @@
+import 'dart:io';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/api/api.dart';
 import 'package:flutter_application_1/screens/login/signin_screen.dart';
-import 'package:flutter_application_1/theme/theme.dart';
 import 'package:flutter_application_1/widgets/custom_scaffold.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/config.dart';
@@ -16,6 +19,7 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final _auth = FirebaseAuth.instance;
   final _formSignupKey = GlobalKey<FormState>();
   bool agreePersonalData = true;
   bool isSupervisor = false; // New variable to track supervisor state
@@ -32,19 +36,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void registerUser() async {
     if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
-      var regBody = {
-        "email": emailController.text,
-        "password": passwordController.text,
-        "firstName": firstNameController.text,
-        "lastName": lastNameController.text,
-        "gender": selectedGender,
-        "birthdate": dobController.text,
-        "role": isSupervisor ? "supervisor" : "user",
-
-        ///"cvFilePath": cvFilePath,
-      };
-
       try {
+        // Upload CV to Firebase Storage if user is supervisor
+        String? cvUrl;
+        if (isSupervisor && cvFilePath != null) {
+          cvUrl = await uploadCvFileToFirebase(cvFilePath!);
+        }
+
+        var regBody = {
+          "email": emailController.text,
+          "password": passwordController.text,
+          "firstName": firstNameController.text,
+          "lastName": lastNameController.text,
+          "gender": selectedGender,
+          "birthdate": dobController.text,
+          "role": isSupervisor ? "supervisor" : "user",
+          "cv": cvUrl, // Store the URL of the uploaded CV
+        };
+
         var response = await http.post(
           Uri.parse(registration),
           headers: {"Content-Type": "application/json"},
@@ -52,6 +61,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
 
         if (response.statusCode == 201) {
+          try {
+            // Create the user in Firebase Authentication
+            final newUser =
+                await FirebaseAuth.instance.createUserWithEmailAndPassword(
+              email: emailController.text,
+              password: passwordController.text,
+            );
+
+            // Check if the user was successfully created
+            if (newUser.user != null) {
+              print("User created: ${newUser.user?.email}");
+
+              // Set the current email globally
+              APIS.initializeEmail(newUser.user!.email!);
+
+              // Now, call createUser() to save user data to Firestore
+              await APIS.createUser();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('User creation failed.')));
+            }
+          } catch (e) {
+            print("Error: $e");
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('An error occurred. Please try again.')));
+          }
+
           var jsonResponse = jsonDecode(response.body);
           print(jsonResponse['status']);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -77,6 +113,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
       setState(() {
         _isNotValidate = true;
       });
+    }
+  }
+
+// Function to upload CV to Firebase Storage
+  Future<String?> uploadCvFileToFirebase(String filePath) async {
+    try {
+      // Create a reference to Firebase Storage
+
+      final cvRef = APIS.storage
+          .ref()
+          .child('cv_files/${DateTime.now().millisecondsSinceEpoch}.pdf');
+
+      // Upload the file
+      final uploadTask = await cvRef.putFile(File(filePath));
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+
+      return downloadUrl;
+    } catch (e) {
+      print('CV upload failed: $e');
+      return null;
     }
   }
 
@@ -135,7 +191,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 30.0),
-      
+
                         // Create Account as Supervisor Switch
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
@@ -154,14 +210,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   isSupervisor = value;
                                 });
                               },
-                            activeColor: ourBlue,
-                            inactiveThumbColor: const Color.fromARGB(255, 198, 64, 64),  
+                              activeColor: ourBlue,
+                              inactiveThumbColor:
+                                  const Color.fromARGB(255, 198, 64, 64),
                             ),
-                            
                           ],
                         ),
-      
-                        //space 
+
+                        //space
                         const SizedBox(height: 20.0),
                         // First Name
                         TextFormField(
@@ -183,7 +239,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 25.0),
-      
+
                         // Last Name
                         TextFormField(
                           controller: lastNameController,
@@ -204,7 +260,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 25.0),
-      
+
                         // Gender
                         DropdownButtonFormField<String>(
                           value: selectedGender,
@@ -219,20 +275,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             DropdownMenuItem(
                               value: 'Male',
                               child: Text(
-                              'Male',
-                              style: TextStyle(
-                              //color: ourPink,
-                              fontSize:14,),  // Custom text color
-                            ),
+                                'Male',
+                                style: TextStyle(
+                                  //color: ourPink,
+                                  fontSize: 14,
+                                ), // Custom text color
+                              ),
                             ),
                             DropdownMenuItem(
                               value: 'Female',
                               child: Text(
-                              'Female',
-                              style: TextStyle(
-                                //color: ourPink,
-                                fontSize:14,), // Custom text color
-                            ),
+                                'Female',
+                                style: TextStyle(
+                                  //color: ourPink,
+                                  fontSize: 14,
+                                ), // Custom text color
+                              ),
                             ),
                           ],
                           decoration: InputDecoration(
@@ -241,12 +299,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                         
-                           dropdownColor: offwhite, // Background color of dropdown menu
-                            borderRadius: BorderRadius.circular(25), 
+
+                          dropdownColor:
+                              offwhite, // Background color of dropdown menu
+                          borderRadius: BorderRadius.circular(25),
                         ),
                         const SizedBox(height: 25.0),
-      
+
                         // Date of Birth
                         TextFormField(
                           controller: dobController,
@@ -260,11 +319,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ),
                           onTap: () async {
+                            // Get the current year
+                            int currentYear = DateTime.now().year;
+
+                            // Calculate the appropriate lastDate based on whether the user is a supervisor or not
+                            DateTime lastDate;
+                            if (isSupervisor) {
+                              lastDate = DateTime(currentYear -
+                                  20); // Supervisor should be at least 20 years old
+                            } else {
+                              lastDate = DateTime(currentYear -
+                                  5); // Non-supervisor should be at least 5 years old
+                            }
+
+                            // Show date picker with the adjusted lastDate
                             DateTime? pickedDate = await showDatePicker(
                               context: context,
-                              initialDate: DateTime.now(),
                               firstDate: DateTime(1900),
-                              lastDate: DateTime(2100),
+                              lastDate: lastDate, // Set the calculated lastDate
                             );
                             if (pickedDate != null) {
                               setState(() {
@@ -275,7 +347,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                         ),
                         const SizedBox(height: 25.0),
-      
+
                         // Email
                         TextFormField(
                           controller: emailController,
@@ -300,14 +372,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 25.0),
-      
+
                         // Password
                         TextFormField(
                           controller: passwordController,
                           obscureText: true,
                           obscuringCharacter: '•',
                           validator: (value) {
-                             if (value == null || value.isEmpty) {
+                            if (value == null || value.isEmpty) {
                               return 'Please enter Password';
                             } else if (value.length < 8) {
                               return 'Password must be at least 8 characters long';
@@ -327,7 +399,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         const SizedBox(height: 25.0),
-      
+
                         // Conditional CV Upload Field
                         if (isSupervisor)
                           Column(
@@ -357,9 +429,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ),
                             ],
                           ),
-      
+
                         const SizedBox(height: 50.0),
-      
+
                         // Register Button
                         SizedBox(
                           width: double.infinity,
@@ -371,7 +443,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               //   borderRadius: BorderRadius.circular(10),
                               // ),
                             ),
-                            onPressed: () {
+                            onPressed: () async {
                               if (_formSignupKey.currentState!.validate()) {
                                 registerUser();
                               }
@@ -379,14 +451,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             child: const Text(
                               'Register',
                               style: TextStyle(
-                                fontSize: 16.0,                         
+                                fontSize: 16.0,
                               ),
                             ),
                           ),
                         ),
                         const SizedBox(height: 30.0),
-      
-                           Row(
+
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Text(

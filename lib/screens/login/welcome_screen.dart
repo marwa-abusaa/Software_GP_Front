@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/login/signin_screen.dart';
 import 'package:flutter_application_1/screens/login/signup_screen.dart';
+
 import 'package:flutter_application_1/widgets/welcome_button.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
 
@@ -17,7 +18,8 @@ class WelcomeScreen extends StatelessWidget {
             decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/images/1.png'),
-                fit: BoxFit.cover, // Makes sure the image covers the entire background
+                fit: BoxFit
+                    .cover, // Makes sure the image covers the entire background
               ),
             ),
           ),

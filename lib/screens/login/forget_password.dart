@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
-import 'package:flutter_application_1/widgets/custom_scaffold.dart';
 import 'send_password.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_application_1/config.dart';
-import 'dart:convert';  // Add this import
+import 'dart:convert'; // Add this import
 
 class ForgotPassword extends StatefulWidget {
   const ForgotPassword({Key? key}) : super(key: key);
@@ -14,10 +13,9 @@ class ForgotPassword extends StatefulWidget {
 }
 
 class _ForgotPasswordState extends State<ForgotPassword> {
+  TextEditingController emailController = TextEditingController();
 
-TextEditingController emailController = TextEditingController();
-
-void forgetPassword() async {
+  void forgetPassword() async {
     if (emailController.text.isNotEmpty) {
       var regBody = {"email": emailController.text};
       try {
@@ -29,9 +27,9 @@ void forgetPassword() async {
 
         if (response.statusCode == 200) {
           Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const sendPassword()),
-        );
+            context,
+            MaterialPageRoute(builder: (context) => const sendPassword()),
+          );
           var jsonResponse = jsonDecode(response.body);
           print(jsonResponse['status']);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -52,8 +50,6 @@ void forgetPassword() async {
       }
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -100,41 +96,40 @@ void forgetPassword() async {
       );
     }
 
-  // Submit Button
-Widget _buildSubmitBtn() {
-  return SizedBox(
-    width: MediaQuery.of(context).size.width,
-    height: 60,  // Set the height of the button here
-    child: MaterialButton(
-      elevation: 0.0,
-      highlightElevation: 0.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      color: ourBlue,
-       onPressed: () {
-        // Navigate to PasswordSentPage when button is pressed
-        forgetPassword();
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => const sendPassword()),
-        // );
-      },
-      child: const Text(
-        "Submit",
-        style: TextStyle(
-          fontSize: 18.0,
-          color: Colors.white,
-          fontWeight: FontWeight.w500,
+    // Submit Button
+    Widget _buildSubmitBtn() {
+      return SizedBox(
+        width: MediaQuery.of(context).size.width,
+        height: 60, // Set the height of the button here
+        child: MaterialButton(
+          elevation: 0.0,
+          highlightElevation: 0.0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15.0),
+          ),
+          color: ourBlue,
+          onPressed: () {
+            // Navigate to PasswordSentPage when button is pressed
+            forgetPassword();
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(builder: (context) => const sendPassword()),
+            // );
+          },
+          child: const Text(
+            "Submit",
+            style: TextStyle(
+              fontSize: 18.0,
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
-      ),
-    ),
-  );
-}
-
+      );
+    }
 
     return Scaffold(
-       backgroundColor:offwhite,
+      backgroundColor: offwhite,
       body: SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Container(
@@ -157,18 +152,18 @@ Widget _buildSubmitBtn() {
                   ),
                 ),
               ),
-                    Expanded(
-                  flex: 8,
-                  child: Container(                  
-                    alignment: Alignment.center, // Change position, e.g., Alignment.center, Alignment.topLeft
-                    child: Image.asset(
-                      "assets/images/forgot3.png",
-                      height: 250,
-                      //fit: BoxFit.contain, // You can use BoxFit.cover, BoxFit.fill, etc.
-                    ),
+              Expanded(
+                flex: 8,
+                child: Container(
+                  alignment: Alignment
+                      .center, // Change position, e.g., Alignment.center, Alignment.topLeft
+                  child: Image.asset(
+                    "assets/images/forgot3.png",
+                    height: 250,
+                    //fit: BoxFit.contain, // You can use BoxFit.cover, BoxFit.fill, etc.
                   ),
+                ),
               ),
-
               Expanded(
                 flex: 16,
                 child: Column(

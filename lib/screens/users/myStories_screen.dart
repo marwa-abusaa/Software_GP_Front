@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/widgets/custom_home.dart';
 
 class MyStoriesScreen extends StatefulWidget {
   late String emaill;
@@ -11,8 +12,8 @@ class MyStoriesScreen extends StatefulWidget {
 class _MyStoriesScreenState extends State<MyStoriesScreen> {
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-
+    return  CustomHomePage(
+      emaill: widget.emaill,
       body: 
       
       Center(

@@ -9,7 +9,10 @@ class CustomScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: ourPink,size: 25,),
+        iconTheme: const IconThemeData(
+          color: ourPink,
+          size: 25,
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),

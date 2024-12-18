@@ -4,6 +4,7 @@ import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:flutter_application_1/screens/all_users/profileScreens/mainProfile.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 // ignore: must_be_immutable
 class PersonalInfoScreen extends StatefulWidget {
@@ -108,6 +109,13 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             lastNameController.text = jsonResponse['data']['lastName'] ?? '';
             emailController.text = jsonResponse['data']['email'] ?? '';
             birthdateController.text = jsonResponse['data']['birthdate'] ?? '';
+
+            // Parse and format birthdate
+            String birthdate = jsonResponse['data']['birthdate'] ?? '';
+            if (birthdate.isNotEmpty) {
+              DateTime date = DateTime.parse(birthdate);
+              birthdateController.text = DateFormat('MM-yyyy').format(date);
+            }
           });
         } else if (response.statusCode == 404) {
           var jsonResponse = jsonDecode(response.body);

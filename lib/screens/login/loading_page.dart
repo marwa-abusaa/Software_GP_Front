@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_application_1/screens/login/welcome_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class Loading extends StatefulWidget {
   const Loading({Key? key}) : super(key: key);
