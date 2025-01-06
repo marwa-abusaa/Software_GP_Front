@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/api/api.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:flutter_application_1/screens/supervisors/contestPartipacion.super.dart';
 import 'package:flutter_application_1/widgets/custom_home.dart';
@@ -7,6 +9,8 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/config.dart';
 import 'package:velocity_x/velocity_x.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io'; // For File
 
 class AddCompetitionsScreen extends StatefulWidget {
   final token;
@@ -37,6 +41,9 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
   List? items;
   late String contestId;
 
+  
+
+
   @override
   void initState() {
     // TODO: implement initState
@@ -47,7 +54,7 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
     getContestsList(supervisorId);
   }
 
-  void addContest() async {
+  void addContest(final imageUrl) async {
     if (title.text.isNotEmpty &&
         description.text.isNotEmpty &&
         required_score.text.isNotEmpty &&
@@ -61,7 +68,8 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
         "required_score": required_score.text,
         "submit_date": submit_date.text,
         "voting_start_date": voting_start_date.text,
-        "voting_end_date": voting_end_date.text
+        "voting_end_date": voting_end_date.text,
+        "imageUrl": imageUrl
       };
 
       var response = await http.post(Uri.parse(newContest),
@@ -123,7 +131,7 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
     }
   }
 
-  void updatedContest(id) async {
+  void updatedContest(id,imageUrl) async {
     if (update_title.text.isNotEmpty &&
         update_description.text.isNotEmpty &&
         update_required_score.text.isNotEmpty &&
@@ -138,7 +146,8 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
         "required_score": update_required_score.text,
         "submit_date": update_submit_date.text,
         "voting_start_date": update_voting_start_date.text,
-        "voting_end_date": update_voting_end_date.text
+        "voting_end_date": update_voting_end_date.text,
+        "imageUrl": imageUrl
       };
 
       var response = await http.patch(
@@ -309,6 +318,100 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
           ],
         ));
   }
+
+ File? _selectedImage;
+ final picker = ImagePicker();
+  bool isPicked=false;
+Future<void> pickImage() async {
+  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+  if (pickedFile != null) {
+    setState(() {
+      _selectedImage = File(pickedFile.path);
+      isPicked = true;
+    });
+
+    // Show the custom dialog after picking the image
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Success'),
+          content:
+              const Text('The image was successfully uploaded!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // إغلاق النافذة المنبثقة
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+
+    );
+
+  
+  }
+}
+
+bool isAddButton=false;
+  // Function to handle the "Add Image" button click
+  Future<void> handleAddImage() async {
+    if (_selectedImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Please fill in all fields and select an image')),
+      );
+      return;
+    }
+
+    final imageUrl = await uploadImage(_selectedImage!);
+    if (imageUrl != null) {
+      if(isAddButton){
+        addContest(imageUrl);
+      }
+      else{
+        updatedContest(contestId, imageUrl);
+      }
+       
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to upload image')),
+      );
+    }
+  }
+
+    // Function to upload image to Firebase Storage and get the download URL
+  Future<String?> uploadImage(File image) async {
+    try {
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      final storageRef = APIS.storage.ref().child('contestImages/$fileName');
+      await storageRef.putFile(image);
+      return await storageRef.getDownloadURL();
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
+
+  // String? _ContestImageUrl;
+  // //get image
+  //   Future<void> _fetchContestImage() async {
+  //   try {
+  //     // Fetch the image URL
+  //     final ContestImageUrl = await fetchUserImage(widget.emaill);
+
+  //     // Update the state synchronously
+  //     setState(() {
+  //       _ContestImageUrl = ContestImageUrl;
+  //     });
+  //   } catch (e) {
+  //     print('Error fetching profile data: $e');
+  //   }
+  // }
+   
+
 
   Future<void> _displayTextInputDialog(BuildContext context) async {
     return showDialog(
@@ -483,9 +586,30 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                       }
                     },
                   ).p4().px8(),
-                  SizedBox(
-                    height: 3,
+                  const SizedBox(  height: 17, ),
+                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Transform.translate(
+                        offset: Offset(-7, 0),
+                          child: const Text(
+                           'Upload Contest\'s Image', // تأكد من استخدام النص الصحيح
+                            style: TextStyle(
+                              fontSize: 17.0,
+                              color: Colors.black,
+                            ),
+                          ),
+                      ),
+                      IconButton(
+                         icon:const Icon(Icons.upload,size: 30,color: ourPink,                      
+                        ),
+                        onPressed:(){
+                          pickImage();
+                        } 
+                      )
+                    ],
                   ),
+                  const SizedBox(  height: 15, ),
                   SizedBox(
                     height: 60,
                     width: 150, // Set the width you want
@@ -494,9 +618,13 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                         backgroundColor: ourBlue,
                       ),
                       onPressed: () {
-                        addContest();
+                        //addContest();
+                         handleAddImage();
+                         setState(() {
+                           isAddButton=true;
+                         });
                       },
-                      child: Text("Add"),
+                      child: const Text("Add"),
                     ),
                   )
                 ],
@@ -797,7 +925,30 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(  height: 10, ),
+                    Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Transform.translate(
+                        offset: Offset(-7, 0),
+                          child: const Text(
+                           'Update Contest\'s Image', // تأكد من استخدام النص الصحيح
+                            style: TextStyle(
+                              fontSize: 17.0,
+                              color: Colors.black,
+                            ),
+                          ),
+                      ),
+                      IconButton(
+                         icon:const Icon(Icons.upload,size: 30,color: ourPink,                      
+                        ),
+                        onPressed:(){
+                          pickImage();
+                        } 
+                      )
+                    ],
+                  ),
+                  const SizedBox(  height: 15, ),
                   SizedBox(
                     height: 60,
                     width: 150,
@@ -808,9 +959,13 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                       ),
                       onPressed: () {
                         print('id from func:' + contestId);
-                        updatedContest(contestId);
+                        //updatedContest(contestId,);
+                         handleAddImage();
+                          setState(() {
+                           isAddButton=false;
+                         });
                       },
-                      child: Text("Update"),
+                      child: const Text("Update"),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -858,7 +1013,7 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
         child: Column(
           children: [
             ListTile(
-              contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -896,11 +1051,11 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   image: DecorationImage(
-                    image: AssetImage(index % 2 == 0
-                        ? 'assets/images/contest.png'
-                        : 'assets/images/contest2.png'),
-                    fit: BoxFit.cover,
-                  ),
+                  image: items![index]['imageUrl'] != null
+                      ? NetworkImage(items![index]['imageUrl']) // استخدم الرابط من القائمة
+                      : AssetImage('assets/images/contest.png') as ImageProvider, // صورة افتراضية
+                  fit: BoxFit.cover,
+                ),
                 ),
               ),
             ),
@@ -914,7 +1069,7 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(Icons.info, color: Colors.black54),
+                        const Icon(Icons.info, color: Colors.black54),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
@@ -922,7 +1077,7 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                             children: [
                               Text(
                                 '${items![index]['description']}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                     fontSize: 14, color: Colors.black54),
                               ),
                             ],
@@ -933,47 +1088,47 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.calendar_month_rounded,
+                        const Icon(Icons.calendar_month_rounded,
                             color: Colors.black54),
                         const SizedBox(width: 8),
                         Text(
                           'Submit date: ${items![index]['submit_date']}',
-                          style: TextStyle(fontSize: 14, color: Colors.black54),
+                          style: const TextStyle(fontSize: 14, color: Colors.black54),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.calendar_month_rounded,
+                        const Icon(Icons.calendar_month_rounded,
                             color: Colors.black54),
                         const SizedBox(width: 8),
                         Text(
                           'Voting starts on: ${items![index]['voting_start_date']}',
-                          style: TextStyle(fontSize: 14, color: Colors.black54),
+                          style: const TextStyle(fontSize: 14, color: Colors.black54),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.calendar_month_rounded,
+                        const Icon(Icons.calendar_month_rounded,
                             color: Colors.black54),
                         const SizedBox(width: 8),
                         Text(
                           'Voting ends on: ${items![index]['voting_end_date']}',
-                          style: TextStyle(fontSize: 14, color: Colors.black54),
+                          style: const TextStyle(fontSize: 14, color: Colors.black54),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.star_rate_rounded, color: Colors.black54),
+                        const Icon(Icons.star_rate_rounded, color: Colors.black54),
                         const SizedBox(width: 8),
                         Text(
                           'Required score: ${items![index]['required_score']}',
-                          style: TextStyle(fontSize: 14, color: Colors.black54),
+                          style: const TextStyle(fontSize: 14, color: Colors.black54),
                         ),
                       ],
                     ),
@@ -988,14 +1143,14 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                             print('contestId: ' + contestId);
                             _displayTextInputDialogforUpdate(context);
                           },
-                          icon: Icon(Icons.edit, color: Colors.white),
-                          label: Text('Update'),
+                          icon: const Icon(Icons.edit, color: Colors.white),
+                          label: const Text('Update'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color.fromARGB(
                                 255, 77, 152, 189), // لون الخلفية
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 7), // طول وعرض الزر
-                            textStyle: TextStyle(fontSize: 14), // حجم النص
+                            textStyle: const TextStyle(fontSize: 14), // حجم النص
                             shape: RoundedRectangleBorder(
                               borderRadius:
                                   BorderRadius.circular(12), // حواف دائرية
@@ -1012,14 +1167,14 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                             // Refresh the contests list
                             getContestsList(supervisorId);
                           },
-                          icon: Icon(Icons.delete, color: Colors.white),
-                          label: Text('Delete'),
+                          icon: const Icon(Icons.delete, color: Colors.white),
+                          label: const Text('Delete'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color.fromARGB(
                                 255, 230, 74, 63), // لون الخلفية
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 7), // طول وعرض الزر
-                            textStyle: TextStyle(fontSize: 14), // حجم النص
+                            textStyle: const TextStyle(fontSize: 14), // حجم النص
                             shape: RoundedRectangleBorder(
                               borderRadius:
                                   BorderRadius.circular(12), // حواف دائرية

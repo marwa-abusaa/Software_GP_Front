@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/api/api.dart';
 import 'package:flutter_application_1/api/info.dart';
+import 'package:flutter_application_1/api/notification_services.dart';
 import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/screens/pdfView.dart';
 import 'package:flutter_application_1/screens/supervisors/super.service.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
+import 'package:flutter_application_1/screens/all_users/profileScreens/chratData.dart';
 
 class BookRequestPage extends StatefulWidget {
   @override
@@ -51,13 +54,16 @@ class _BookRequestPageState extends State<BookRequestPage> {
               itemBuilder: (context, index) {
                 final book = books[index];
                 return GestureDetector(
-                  onTap: () {
+                  onTap: () async  {
+                     // Fetch the author name asynchronously
+                  final authorName = await getUserFullName(book['email']);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => PdfViewerScreen(
                           pdfUrl: book['pdfLink'],
                           title: book['name'],
+                          author: authorName,
                         ),
                       ),
                     );
@@ -164,9 +170,17 @@ class _BookRequestPageState extends State<BookRequestPage> {
     final comment = _commentController.text;
     _commentController.clear();
 
-    // Here, you can send the action (accept/deny) and the comment to the backend for processing.
-    // For now, we will just print the action and comment.
+    String? pushToken = await APIS.getPushTokenByEmail(book['email']);
+    if (pushToken != null) {
+      print('Push Token: $pushToken');
+    } else {
+      print('Push token not found for email: ');
+    }
     if (action == 'deny') {
+      if (pushToken != null) {
+        NotificationService.sendNotification(pushToken, "Book denied",
+            " Your ${book['name']} has been denied by the supervisor open app to get more details");
+      }
       print("the book is denied");
       await updateBookStatus(book['name'], book['email'], "denied", comment);
       // Instead of calling initState(), use setState to refresh the UI
@@ -174,6 +188,10 @@ class _BookRequestPageState extends State<BookRequestPage> {
         _books = fetchBooksBySuperEmail(EMAIL);
       });
     } else {
+      if (pushToken != null) {
+        NotificationService.sendNotification(pushToken, "Book Accepted",
+            " Your ${book['name']} has been accepted by the supervisor and published to all users");
+      }
       print("the book is accepted");
       await registerBookToPublish(
           book['name'],
@@ -186,6 +204,8 @@ class _BookRequestPageState extends State<BookRequestPage> {
           book['email']);
       await updateBookStatus(book['name'], book['email'], "accepted", comment);
       // Instead of calling initState(), use setState to refresh the UI
+      await incrementCreatedStory(book['email']);
+      await incrementProgress(book['email'], "creating");
 
       setState(() {
         _books = fetchBooksBySuperEmail(EMAIL);

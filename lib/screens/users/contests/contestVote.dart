@@ -209,6 +209,7 @@ class _ContestParticipantsScreenState extends State<ContestParticipantsScreen> {
                             builder: (context) => PdfViewerScreen(
                               pdfUrl: book['pdfLink'],
                               title: book['name'],
+                              author: book['author'],
                             ),
                           ),
                         );

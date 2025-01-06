@@ -3,11 +3,12 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api/api.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
-import 'package:flutter_application_1/screens/StoryDesign/addNewImage--temp.dart';
+import 'package:flutter_application_1/screens/admin/addNewImage.dart';
 import 'package:flutter_application_1/screens/StoryDesign/myBooks.dart';
 import 'package:flutter_application_1/screens/chatting/chat_home.dart';
 import 'package:flutter_application_1/screens/supervisors/childRequests.dart';
 import 'package:flutter_application_1/screens/supervisors/supervisor_home_screen.dart';
+import 'package:flutter_application_1/screens/users/follow/followScreen.dart';
 import 'package:flutter_application_1/screens/users/home_screen.dart';
 import 'package:flutter_application_1/screens/users/myStories_screen.dart';
 import 'package:flutter_application_1/screens/all_users/profileScreens/mainProfile.dart';
@@ -415,10 +416,16 @@ class _CustomHomePageState extends State<CustomHomePage> {
                 print("Notifications tapped!");
                 //// temp
                 ///
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AddImagePage()),
-                );
+                ///
+                if (ROLE == 'user') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => UsersPage(
+                              currentUserEmail: EMAIL,
+                            )),
+                  );
+                }
                 // Navigate to Notifications Page or perform other action
                 setState(() {
                   //currentScreen=Notifications(emaill: emaill);
@@ -431,7 +438,7 @@ class _CustomHomePageState extends State<CustomHomePage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.notifications,
+                      Icons.group,
                       color: currentTab == 3 ? iconsBar : Colors.white,
                       size: 30,
                     ),

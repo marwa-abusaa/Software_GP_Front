@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_application_1/api/notification_services.dart';
 import 'package:flutter_application_1/models/message.dart';
 import 'package:flutter_application_1/models/userChat.dart';
 import 'dart:developer';
@@ -255,6 +256,27 @@ class APIS {
         .collection('chats/${getConversationID(chatUser.id)}/messages/');
 
     await ref.doc(time).set(message.toJson());
+    String? senderName = user!.email;
+    try {
+      // استعلام Firestore لجلب بيانات المستخدم بناءً على البريد الإلكتروني
+      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user?.email) // البريد الإلكتروني كمعرّف للمستند
+          .get();
+
+      if (userSnapshot.exists) {
+        // استخراج pushToken من المستند
+        String pushToken = userSnapshot['push_token'];
+
+        // إرسال الإشعار باستخدام pushToken
+        await NotificationService.sendNotification(
+            chatUser.pushToken, "Message from $senderName", msg);
+      } else {
+        print("User with email  does not exist.");
+      }
+    } catch (e) {
+      print("Error sending notification: $e");
+    }
     //await ref.doc(time).set(message.toJson()).then((value) =>
     //   sendPushNotification(chatUser, type == Type.text ? msg : 'image'));
   }
@@ -305,5 +327,26 @@ class APIS {
     //updating image in firestore database
     final imageUrl = await ref.getDownloadURL();
     await sendMessage(chatUser, imageUrl, Type.image);
+  }
+
+  // Static function to get push token by email
+  static Future<String?> getPushTokenByEmail(String email) async {
+    try {
+      // Fetch user document from Firestore
+      DocumentSnapshot userSnapshot =
+          await FirebaseFirestore.instance.collection('users').doc(email).get();
+
+      if (userSnapshot.exists) {
+        // Return the push token
+        return userSnapshot['push_token'] as String?;
+      } else {
+        print('User document does not exist for email: $email');
+        return null;
+      }
+    } catch (e) {
+      // Handle errors
+      print('Error fetching push token: $e');
+      return null;
+    }
   }
 }

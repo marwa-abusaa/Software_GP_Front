@@ -1,9 +1,7 @@
 import 'dart:convert';
-import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
-import 'package:flutter_application_1/screens/all_users/profileScreens/mainProfile.dart';
 import 'package:http/http.dart' as http;
 
 // ignore: must_be_immutable
@@ -138,25 +136,25 @@ class _EditPasswordScreenState extends State<EditPasswordScreen> {
     if (widget.emaill.isNotEmpty) {
       // Check if the old password matches the hashed password
       //if (BCrypt.checkpw(oldPasswordController.text, passwordFromAPI)) {
-        var reqBody = {
-          "email": widget.emaill,
-          "newPass": newPasswordController.text,
-        };
+      var reqBody = {
+        "email": widget.emaill,
+        "newPass": newPasswordController.text,
+      };
 
-        var response = await http.patch(
-          Uri.parse(newPass),
-          headers: {"Content-Type": "application/json"},
-          body: jsonEncode(reqBody),
-        );
-        print("Updated code: " + response.statusCode.toString());
+      var response = await http.patch(
+        Uri.parse(newPass),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(reqBody),
+      );
+      print("Updated code: " + response.statusCode.toString());
 
-        if (response.statusCode == 200) {
-          print("Updated successfully");
-          showSuccessDialog();
-        } else {
-          showErrorSnackbar('Something went wrong. Please try again later.');
-        }
-      //} 
+      if (response.statusCode == 200) {
+        print("Updated successfully");
+        showSuccessDialog();
+      } else {
+        showErrorSnackbar('Something went wrong. Please try again later.');
+      }
+      //}
       // else {
       //   showErrorSnackbar('Old password is not correct.');
       // }

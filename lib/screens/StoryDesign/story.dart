@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
@@ -5,6 +6,7 @@ import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/screens/StoryDesign/drafts.dart';
 import 'package:flutter_application_1/screens/StoryDesign/draw.dart';
 import 'package:flutter_application_1/screens/StoryDesign/storyServices/storyService.dart';
+import 'package:flutter_application_1/screens/StoryDesign/generateImageAI.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart'; // استيراد مكتبة اختيار اللون
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -23,6 +25,9 @@ import 'package:http/http.dart' as http;
 /////سلة الزبالة والفويس
 import 'package:matrix_gesture_detector/matrix_gesture_detector.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+//speech to text
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+
 
 class PageComponent {
   String type; // 'text' or 'image'
@@ -215,6 +220,41 @@ class _EditorPageState extends State<EditorPage>
   String? audioPath;
   bool showSaveButton = false;
 
+  //speech to text
+    stt.SpeechToText _speech = stt.SpeechToText();
+
+   // تهيئة speech_to_text
+  Future<void> _initSpeech() async {
+    bool available = await _speech.initialize();
+    if (!available) {
+      // عرض رسالة خطأ إذا لم تتوفر الخدمة
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Speech recognition is not available.')),
+      );
+    }
+  }
+
+   void _startListening() {
+    _speech.listen(
+      onResult: (result) {
+        setState(() {
+          enteredText = result.recognizedWords;
+          _controller.text = result.recognizedWords; // تحديث النص في TextField
+        _controller.selection = TextSelection.fromPosition(
+          TextPosition(offset: _controller.text.length),
+        );
+        });
+      },
+      listenMode: stt.ListenMode.dictation, // ضبط الوضع للاستماع المستمر
+    );
+    setState(() {
+      //_isListening = true;
+    });
+  }
+
+  //voice for fierbase
+  String pdfID='';
+
   Future<String> uploadCoverImage(Uint8List image) async {
     try {
       // Define the file path in Firebase Storage
@@ -238,54 +278,132 @@ class _EditorPageState extends State<EditorPage>
 
   ///فنكنشات الفويس
   Future<void> _startRecording() async {
-    final status = await Permission.microphone.request();
-    if (status.isGranted) {
-      //final path = 'audio_${DateTime.now().millisecondsSinceEpoch}.aac';
-      final directory = await getExternalStorageDirectory();
-      final filePath =
-          '${directory!.path}/MyRecordings/audio_${DateTime.now().millisecondsSinceEpoch}.aac';
+  final status = await Permission.microphone.request();
+  if (status.isGranted) {
+    //final path = 'audio_${DateTime.now().millisecondsSinceEpoch}.aac';
+    final directory = await getExternalStorageDirectory();
+    final filePath = '${directory!.path}/audio_${DateTime.now().millisecondsSinceEpoch}.aac';
+     setState(() {
       audioPath = filePath;
-      await _recorder!.startRecorder(toFile: filePath);
-      setState(() {
-        isRecording = true;
-      });
+    });
+    
+    await _recorder!.startRecorder(toFile: filePath);
+    setState(() {
+      isRecording = true;
+    });
+
+    //   // Upload to Firebase Storage
+    // if (audioPath != null) {
+    //   final audioUrl = await _uploadAudioToFirebase(audioPath!);
+    //   if (audioUrl != null) {
+    //     //String pdfId = await _savePdf();
+    //     await _saveAudioUrlToMongoDB(audioUrl, pdfID); // Replace "12345" with actual pdfId
+    //   }
+    // }
+
+
+  } else {
+    // Handle permission denial
+  }
+}
+
+
+Future<String?> _uploadAudioToFirebase(String filePath) async {
+  try {
+    final fileName = filePath.split('/').last;
+    final ref = FirebaseStorage.instance.ref().child('audioRecords/$fileName');
+    final uploadTask = ref.putFile(File(filePath));
+    final snapshot = await uploadTask;
+    final url = await snapshot.ref.getDownloadURL();
+    return url;
+  } catch (e) {
+    print('Error uploading audio: $e');
+    return null;
+  }
+}
+
+Future<void> _saveAudioUrlToMongoDB(String audioUrl, String pdfId) async {
+  try {
+    final response = await http.post(
+      Uri.parse(addRecorde), // Replace with your backend URL
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "pdfId": pdfId,
+        "url": audioUrl,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      print('Audio URL saved to MongoDB');
     } else {
-      // Handle permission denial
+      print('Error saving URL to MongoDB: ${response.body}');
     }
+  } catch (e) {
+    print('Error saving URL to MongoDB: $e');
   }
+}
 
-  Future<void> _stopRecording() async {
-    await _recorder!.stopRecorder();
-    setState(() {
-      isRecording = false;
-    });
-  }
 
-  Future<void> _playRecording() async {
-    if (audioPath != null) {
-      await _player!.startPlayer(fromURI: audioPath);
+// Future<void> _stopRecording() async {
+//   await _recorder!.stopRecorder();
+//   setState(() {
+//     isRecording = false;
+//   });
+// }
+
+Future<void> _stopRecording() async {
+  if (isRecording) {
+    try {
+      await _recorder!.stopRecorder();
       setState(() {
-        isPlaying = true;
-        showSaveButton = true; // إخفاء زر الحفظ أثناء التشغيل
+        isRecording = false;
       });
-      _player!.onProgress!.listen((e) {
-        if (e.position.inMilliseconds >= e.duration.inMilliseconds) {
-          setState(() {
-            isPlaying = false;
-            showSaveButton = true; // إظهار زر الحفظ عند انتهاء التشغيل
-          });
+
+      if (audioPath != null) {
+        print('Recording saved at: $audioPath');
+        final audioUrl = await _uploadAudioToFirebase(audioPath!);
+        if (audioUrl != null) {
+          print('Audio uploaded to Firebase: $audioUrl');
+           await _saveAudioUrlToMongoDB(audioUrl, pdfID);
+        } else {
+          print('Failed to upload audio');
         }
-      });
+      } else {
+        print('Audio path is null');
+      }
+    } catch (e) {
+      print('Error stopping recorder: $e');
     }
   }
+}
 
-  Future<void> _stopPlayback() async {
-    await _player!.stopPlayer();
+
+Future<void> _playRecording() async {
+  if (audioPath != null) {
+    await _player!.startPlayer(fromURI: audioPath);
     setState(() {
-      isPlaying = false;
-      showSaveButton = false;
+      isPlaying = true;
+      showSaveButton = true; // إخفاء زر الحفظ أثناء التشغيل
+    });
+    _player!.onProgress!.listen((e) {
+      if (e.position.inMilliseconds >= e.duration.inMilliseconds) {
+        setState(() {
+          isPlaying = false;
+          showSaveButton = true; // إظهار زر الحفظ عند انتهاء التشغيل
+        });
+      }
     });
   }
+}
+
+Future<void> _stopPlayback() async {
+  await _player!.stopPlayer();
+  setState(() {
+    isPlaying = false;
+    showSaveButton = false;
+  });
+}
+
 
   ///خلصت فنكشنات الفويس
 
@@ -606,6 +724,10 @@ class _EditorPageState extends State<EditorPage>
                       draftId,
                       APIS.mySuperEmail,
                       category); // Pass the selected category
+                      
+                       setState(() {
+                          pdfID=pdfId ;
+                        });
 
                   // Optionally, show a confirmation message or proceed to download as PDF
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -635,6 +757,9 @@ class _EditorPageState extends State<EditorPage>
     _player = FlutterSoundPlayer();
     _recorder!.openRecorder();
     _player!.openPlayer();
+
+    //speech to text
+     _initSpeech();
 
     fillImageCategories();
     // أضف مفتاحًا للصفحة الأولى عند بدء التطبيق
@@ -849,7 +974,7 @@ class _EditorPageState extends State<EditorPage>
       }
 
       // حفظ الملف
-      final pdfBytes = await document.save();
+      final pdfBytes = await document.save();    
 
 // Define the Firebase path
       final firebasePath =
@@ -861,13 +986,14 @@ class _EditorPageState extends State<EditorPage>
       // الحصول على الرابط المباشر للـ PDF
       final downloadUrl = await storageRef.getDownloadURL();
 
+       
       // تنزيل الـ PDF إلى جهاز المستخدم
       await _downloadPdf(downloadUrl);
 
       // عرض نافذة منبثقة بعد حفظ ورفع الـ PDF بنجاح
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+         const SnackBar(
             content: Text('Storybook saved, uploaded, and downloaded!')),
       );
       return downloadUrl;
@@ -1566,6 +1692,13 @@ class _EditorPageState extends State<EditorPage>
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
+                                            Transform.translate(
+                                              offset: Offset(240, 0),
+                                              child: IconButton(
+                                                 icon: Icon( Icons.volume_up,size: 25, ),
+                                                 onPressed: _startListening,
+                                              ),
+                                            ),
                                           TextField(
                                             controller: _controller,
                                             onChanged: (value) async {
@@ -1577,7 +1710,7 @@ class _EditorPageState extends State<EditorPage>
                                               await _checkForErrors1(value);
                                             },
                                             decoration: const InputDecoration(
-                                              hintText: "Write your text",
+                                              hintText: "Write your text or speak it",
                                               border: OutlineInputBorder(),
                                             ),
                                             style: getTextStyle(),
@@ -1687,6 +1820,21 @@ class _EditorPageState extends State<EditorPage>
                                                           onImageUploaded:
                                                               fillImageCategories,
                                                         ) // Pass the function reference)
+                                                    ),
+                                              );
+                                            },
+                                          ),
+                                          const SizedBox(width: 10),
+                                          IconButton(
+                                            icon: const Icon(Icons.psychology,
+                                                size: 30),
+                                            onPressed: () {
+                                               Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        AiTextToImageGenerator(onImageUploaded:
+                                                              fillImageCategories,) // Pass the function reference)
                                                     ),
                                               );
                                             },
@@ -2036,130 +2184,144 @@ class _EditorPageState extends State<EditorPage>
         ],
       ),
       bottomNavigationBar: BottomAppBar(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            width: 100, // حدد العرض الذي تريده هنا
+  child: Padding(
+    padding: const EdgeInsets.all(0.0),
+    child: Container(
+      width: 100, // تحديد العرض المطلوب
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Transform.translate(
+            offset: Offset(-10, 0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                // IconButton(
-                //   icon: Icon(isRecording ? Icons.stop : Icons.mic),
-                //   tooltip: isRecording ? 'Stop Recording' : 'Start Recording',
-                //   onPressed: isRecording ? _stopRecording : _startRecording,
-                // ),
-                // IconButton(
-                //   icon: Icon(isPlaying ? Icons.stop : Icons.play_arrow),
-                //   tooltip: isPlaying ? 'Stop Playback' : 'Play Recording',
-                //   onPressed: isPlaying ? _stopPlayback : _playRecording,
-                // ),
-                // if (showSaveButton) // زر الحفظ يظهر فقط عند وجود تسجيل
-                //   IconButton(
-                //     icon: Icon(Icons.save),
-                //     tooltip: 'Save Recording',
-                //     onPressed: () {
-                //       // Function to save the audio
-
-                //       ScaffoldMessenger.of(context).showSnackBar(
-                //         SnackBar(content: Text('Recording saved!')),
-                //       );
-                //     },
-                //   ),
-
                 IconButton(
-                  icon: const Icon(Icons.undo),
-                  onPressed: () {
-                    if (history.isNotEmpty) {
-                      setState(() {
-                        final lastComponent = history.removeLast();
-                        redoHistory
-                            .add(lastComponent); // إضافة العنصر إلى redoHistory
-                        pages[currentPageIndex]
-                            .components
-                            .remove(lastComponent);
-                      });
-                    }
-                  },
+                  icon: Icon(isRecording ? Icons.stop : Icons.mic),
+                  tooltip: isRecording ? 'Stop Recording' : 'Start Recording',
+                  onPressed: isRecording ? _stopRecording : _startRecording,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.redo),
-                  onPressed: () {
-                    if (redoHistory.isNotEmpty) {
-                      setState(() {
-                        final redoComponent = redoHistory.removeLast();
-                        history.add(redoComponent); // إعادة العنصر إلى history
-                        pages[currentPageIndex].components.add(redoComponent);
-                      });
-                    }
-                  },
+                Transform.translate(
+                  offset: Offset(-8, 0),
+                  child: IconButton(
+                    icon: Icon(isPlaying ? Icons.stop : Icons.play_arrow),
+                    tooltip: isPlaying ? 'Stop Playback' : 'Play Recording',
+                    onPressed: isPlaying ? _stopPlayback : _playRecording,
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _confirmClearPageContent(context); // استدعاء دالة التأكيد
-                  },
-                ),
-
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    if (pages.length > 1) {
-                      // عرض نافذة تأكيد قبل الحذف
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text(
-                                'Are you sure you want to delete this page?'),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () {
-                                  // إغلاق النافذة بدون حذف الصفحة
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('No'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  // حذف الصفحة إذا تم الضغط على "نعم"
-                                  setState(() {
-                                    pages.removeAt(currentPageIndex);
-                                    _pageKeys.removeAt(currentPageIndex);
-                                    currentPageIndex = currentPageIndex > 0
-                                        ? currentPageIndex - 1
-                                        : 0;
-                                    redoHistory
-                                        .clear(); // تنظيف redoHistory عند حذف صفحة
-                                  });
-                                  _pageController.jumpToPage(currentPageIndex);
-                                  Navigator.of(context)
-                                      .pop(); // إغلاق نافذة التأكيد بعد الحذف
-                                },
-                                child: const Text('Yes'),
-                              ),
-                            ],
+                SizedBox(
+                  width: 24, // حجز مساحة ثابتة لزر الحفظ
+                  child: Visibility(
+                    visible: showSaveButton, // التحكم في ظهور الزر
+                    child: Transform.translate(
+                      offset: Offset(-13, 0),
+                      child: IconButton(
+                        icon: Icon(Icons.save),
+                        tooltip: 'Save Recording',
+                        onPressed: () {
+                          // Function to save the audio
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Recording saved!')),
                           );
                         },
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Cannot delete the last page!')),
-                      );
-                    }
-                  },
+                      ),
+                    ),
+                  ),
                 ),
-
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: _addPage,
-                ),
-                // داخل كود EditorPage
               ],
             ),
           ),
-        ),
+          IconButton(
+            icon: const Icon(Icons.undo),
+            onPressed: () {
+              if (history.isNotEmpty) {
+                setState(() {
+                  final lastComponent = history.removeLast();
+                  redoHistory.add(lastComponent); // إضافة العنصر إلى redoHistory
+                  pages[currentPageIndex].components.remove(lastComponent);
+                });
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.redo),
+            onPressed: () {
+              if (redoHistory.isNotEmpty) {
+                setState(() {
+                  final redoComponent = redoHistory.removeLast();
+                  history.add(redoComponent); // إعادة العنصر إلى history
+                  pages[currentPageIndex].components.add(redoComponent);
+                });
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              _confirmClearPageContent(context); // استدعاء دالة التأكيد
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              if (pages.length > 1) {
+                // عرض نافذة تأكيد قبل الحذف
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text(
+                          'Are you sure you want to delete this page?'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            // إغلاق النافذة بدون حذف الصفحة
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('No'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            // حذف الصفحة إذا تم الضغط على "نعم"
+                            setState(() {
+                              pages.removeAt(currentPageIndex);
+                              _pageKeys.removeAt(currentPageIndex);
+                              currentPageIndex = currentPageIndex > 0
+                                  ? currentPageIndex - 1
+                                  : 0;
+                              redoHistory
+                                  .clear(); // تنظيف redoHistory عند حذف صفحة
+                            });
+                            _pageController.jumpToPage(currentPageIndex);
+                            Navigator.of(context)
+                                .pop(); // إغلاق نافذة التأكيد بعد الحذف
+                          },
+                          child: const Text('Yes'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Cannot delete the last page!')),
+                );
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _addPage,
+          ),
+          // داخل كود EditorPage
+        ],
       ),
+    ),
+  ),
+),
+
+      
     );
   }
 }

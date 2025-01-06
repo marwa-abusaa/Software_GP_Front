@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api/api.dart';
 import 'package:flutter_application_1/config.dart';
+import 'package:flutter_application_1/screens/books/BookService%20.dart';
 import 'package:flutter_application_1/screens/pdfView.dart';
 import 'package:flutter_application_1/widgets/comment.dart';
 import 'package:http/http.dart' as http;
@@ -17,6 +18,8 @@ class BookDetailsPage extends StatefulWidget {
 }
 
 class _BookDetailsPageState extends State<BookDetailsPage> {
+  bool isFavorite = false; // لتتبع حالة المفضلة
+
   Map<String, dynamic>? bookDetails;
   List<String> _categories = [];
   List<dynamic> _comments = []; // To store comments
@@ -28,11 +31,72 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
   late double oldRate;
   late double review;
   late double newRate;
+  String author='';
 
   @override
   void initState() {
     super.initState();
     _fetchBookDetails();
+  }
+
+  Future<void> _initializeFavoriteState() async {
+    try {
+      final favoriteStatus =
+          await BookService.isBookInFavorites(EMAIL, bookDetails?['id']);
+
+      setState(() {
+        isFavorite = favoriteStatus;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Failed to load favorite status';
+      });
+      print(e); // Optional: Log the error for debugging
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    try {
+      if (isFavorite) {
+        await BookService.removeBookFromFavorites(EMAIL, bookDetails?['id']);
+        // Show success dialog for removal
+        _showFavoriteStatusDialog("Book removed from favorites successfully!");
+      } else {
+        await BookService.addBookToFavorites(EMAIL, bookDetails?['id']);
+        // Show success dialog for addition
+        _showFavoriteStatusDialog("Book added to favorites successfully!");
+      }
+      setState(() {
+        isFavorite = !isFavorite; // Update favorite status
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update favorite status: $e'),
+        ),
+      );
+    }
+  }
+
+// Function to show the popup dialog
+  void _showFavoriteStatusDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Favorite Status"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _fetchBookDetails() async {
@@ -50,7 +114,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
             bookDetails = jsonResponse['data'];
             oldRate = bookDetails?['rate'].toDouble() ?? 0.0;
             review = bookDetails?['review'].toDouble() ?? 0.0;
-
+            author=bookDetails?['author'];
             // Extract PDF URL if available
             pdfUrl = bookDetails?['pdfLink']; // Store PDF URL
             log("LINK >>>>>>>>>>>>>>>>>>>>>>" + pdfUrl);
@@ -67,6 +131,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
             isLoading = false; // Stop loading when data is ready
           });
           _fetchComments();
+          _initializeFavoriteState();
         } else {
           setState(() {
             errorMessage = 'No book data found.';
@@ -96,6 +161,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
           builder: (context) => PdfViewerScreen(
             pdfUrl: pdfUrl!,
             title: widget.bookName,
+            author: author,
           ),
         ),
       );
@@ -176,6 +242,17 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
             title: Text('Comment Already Exists'),
             content: Text(
                 'You have already added a comment for this book. You can edit your existing comment.'),
+          ),
+        );
+      } else if (response.statusCode == 400) {
+        // Handle the case where the user has already added a comment (status 410)
+        print('');
+        showDialog(
+          context: context,
+          builder: (context) => const AlertDialog(
+            title: Text('Adding comment faild because of comment content'),
+            content: Text(
+                'We appreciate your feedback! However, we encourage you to provide constructive criticism to help improve the content.'),
           ),
         );
       } else {
@@ -299,10 +376,23 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Book Details",
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.grey.withOpacity(0.5),
+        title: const Text(
+          "Book Details",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.teal,
         centerTitle: true,
+        actions: ROLE == 'user'
+            ? [
+                IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : Colors.grey,
+                  ),
+                  onPressed: _toggleFavorite, // عند الضغط على القلب
+                ),
+              ]
+            : null,
       ),
       body: isLoading // Check if data is loading
           ? const Center(

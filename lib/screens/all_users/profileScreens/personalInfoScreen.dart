@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
-import 'package:flutter_application_1/screens/all_users/profileScreens/mainProfile.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 

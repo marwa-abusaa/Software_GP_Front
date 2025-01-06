@@ -323,16 +323,12 @@ class _ContestsScreenState extends State<ContestsScreen> {
                 ],
               ),
               subtitle: Container(
-                height: 160,
+                height: 180,
                 margin: const EdgeInsets.only(top: 10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   image: DecorationImage(
-                    image: AssetImage(
-                      index % 2 == 0
-                          ? 'assets/images/contest.png'
-                          : 'assets/images/contest2.png',
-                    ),
+                    image: NetworkImage(items![index]['imageUrl']),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -515,7 +511,7 @@ class _ContestsScreenState extends State<ContestsScreen> {
     print('start = ${finalDate}  now=  ${now}');
     isJoinButtonEnabled = now.isBefore(finalDate);
     print(isJoinButtonEnabled);
-    return isJoinButtonEnabled; // تحقق إذا كان التاريخ الحالي بين التاريخين
+    return isJoinButtonEnabled; // 
   }
 }//class
 

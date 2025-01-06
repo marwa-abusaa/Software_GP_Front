@@ -92,7 +92,6 @@ Future<String> fetchUserImage(String email) async {
 
       // Check if the response contains the user profile
       if (data['status'] == true && data['data'] != null) {
-        print("Im hele");
         return data['data']['image']; // Return the user's image URL
       } else {
         throw Exception('User profile not found or invalid response.');
@@ -158,7 +157,6 @@ Future<Map<String, dynamic>> getUserProgress(String email) async {
       if (responseData['status'] == true) {
         return responseData['data']; // Return the user profile data
       } else {
-        print("Im hele");
         throw Exception("Error: ${responseData['error']}");
       }
     } else if (response.statusCode == 404) {

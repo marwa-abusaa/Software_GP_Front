@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/all_users/profileScreens/chratData.dart';
+import 'package:flutter_application_1/screens/supervisors/super.service.dart';
 import 'package:flutter_application_1/config.dart';
 import 'package:http/http.dart' as http;
 
@@ -37,6 +39,8 @@ Future<void> joinContest(
       // Successfully joined the contest
       print('Contest joined successfully: ${responseData['success']}');
       // You can also show a success SnackBar if needed
+      await incrementContest(EMAIL);
+      await incrementProgress(EMAIL, "contests");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Contest joined successfully!')),
       );

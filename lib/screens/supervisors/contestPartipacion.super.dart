@@ -104,6 +104,7 @@ class _ContestParticipantsSuperScreenState
                             builder: (context) => PdfViewerScreen(
                               pdfUrl: book['pdfLink'],
                               title: book['name'],
+                              author: book['author'],
                             ),
                           ),
                         );

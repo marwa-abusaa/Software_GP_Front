@@ -1,4 +1,4 @@
-const url = 'http://192.168.68.100:3000/';
+const url = 'http://192.168.68.112:3000/';
 const registration = "${url}reg";
 const login = '${url}login';
 const resetPasswordAPI = '${url}forgetPass';
@@ -63,3 +63,30 @@ const checkUserQuizAttempt = "${url}checkUserQuizAttempt";
 const getChildrenMark = "${url}getChildrenMark";
 const getMyGrades = "${url}getMyGrades";
 const getMyCourseGrade = "${url}getMyCourseGrade";
+
+//recordes
+const addRecorde = "${url}recordings";
+const getRecords = "${url}getRecordings";
+
+//winner
+const getWinnersss = "${url}getWinners";
+const getWinnersBySupervisor = "${url}getWinnersBySupervisor";
+
+//search user
+const searchChildren = "${url}users/search";
+
+// fav
+const fav = "${url}users/favorites";
+
+// follow
+const follow = "${url}follow";
+const unfollow = "${url}unfollow";
+const list = "${url}list";
+const following = "${url}is-following";
+const followingBooks = "${url}following-books";
+const followingSearch = "${url}searchFollow";
+const all_children = "${url}all-children";
+
+const progress = "${url}progress";
+const notActive = "${url}notActive";
+const activate = "${url}activate";

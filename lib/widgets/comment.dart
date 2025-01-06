@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api/api.dart';
+import 'package:flutter_application_1/api/info.dart';
 import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/screens/books/BookDetailsPage.dart';
 import 'package:http/http.dart' as http;
@@ -38,6 +39,7 @@ class _CommentWidgetState extends State<CommentWidget> {
   late double bookRate;
   late double bookReview;
   late double rating;
+  late Future<String> displayUsername;
 
   @override
   void initState() {
@@ -54,11 +56,11 @@ class _CommentWidgetState extends State<CommentWidget> {
     bookRate = widget.bookRate.toDouble();
     bookReview = widget.bookReview.toDouble();
     rating = widget.rating.toDouble();
+    displayUsername = getUserFullName(widget.username);
   }
 
   @override
   Widget build(BuildContext context) {
-    String displayUsername = widget.username.split('@')[0];
     bool isCurrentUserComment = widget.username == APIS.currentEmail;
 
     return isCurrentUserComment
@@ -76,9 +78,37 @@ class _CommentWidgetState extends State<CommentWidget> {
               }
               return false;
             },
-            child: buildCommentCard(displayUsername),
+            child: FutureBuilder<String>(
+              future: displayUsername,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator(); // Display a loading indicator
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else if (snapshot.hasData) {
+                  // Pass the resolved username to the buildCommentCard method
+                  return buildCommentCard(snapshot.data!);
+                } else {
+                  return const Text('No data available');
+                }
+              },
+            ),
           )
-        : buildCommentCard(displayUsername);
+        : FutureBuilder<String>(
+            future: displayUsername,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator(); // Display a loading indicator
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else if (snapshot.hasData) {
+                // Pass the resolved username to the buildCommentCard method
+                return buildCommentCard(snapshot.data!);
+              } else {
+                return const Text('No data available');
+              }
+            },
+          );
   }
 
   // Build comment card
@@ -86,12 +116,37 @@ class _CommentWidgetState extends State<CommentWidget> {
     return Column(
       children: [
         ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Colors.teal,
-            child: Text(
-              displayUsername.isNotEmpty ? displayUsername[0] : '?',
-              style: const TextStyle(color: Colors.white),
-            ),
+          leading: FutureBuilder<String>(
+            future: fetchUserImage(
+                displayUsername), // Call the function with the user's email
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircleAvatar(
+                  backgroundColor: Colors.grey, // Placeholder while loading
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                  ),
+                );
+              } else if (snapshot.hasError ||
+                  !snapshot.hasData ||
+                  snapshot.data!.isEmpty) {
+                // Fallback to default icon if there's an error or no image
+                return CircleAvatar(
+                  backgroundColor: Colors.teal,
+                  child: Text(
+                    displayUsername.isNotEmpty ? displayUsername[0] : '?',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+              } else {
+                // Show the fetched image
+                return CircleAvatar(
+                  backgroundImage: NetworkImage(snapshot.data!),
+                  backgroundColor:
+                      Colors.transparent, // Remove the background color
+                );
+              }
+            },
           ),
           title: Text(widget.comment),
           subtitle: Text("By $displayUsername"),

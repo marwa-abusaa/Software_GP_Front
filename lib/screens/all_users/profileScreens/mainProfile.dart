@@ -4,7 +4,6 @@ import 'package:flutter_application_1/api/info.dart';
 import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:flutter_application_1/screens/all_users/profileScreens/Mysupervisor.dart';
-import 'package:flutter_application_1/screens/all_users/profileScreens/chratData.dart';
 import 'package:flutter_application_1/screens/all_users/profileScreens/personalInfoScreen.dart';
 import 'package:flutter_application_1/screens/all_users/profileScreens/EditPasswordScreen.dart';
 import 'package:flutter_application_1/screens/all_users/profileScreens/prgressTracker.dart';
@@ -13,8 +12,6 @@ import 'package:flutter_application_1/widgets/custom_home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class ProfileScreen extends StatefulWidget {
   final String emaill;
@@ -230,9 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ProgressTrackerPage(
-                                  readingData: readingData,
-                                  creatingData: creatingData,
-                                  coursesData: coursesData,
+                                  email: EMAIL,
                                 ),
                               ),
                             );

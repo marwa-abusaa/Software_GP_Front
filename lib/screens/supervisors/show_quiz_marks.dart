@@ -30,21 +30,23 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
   
    int selectedOption = 0;
 
-  double calculateAverage(List items) {
-  // التحقق من أن القائمة غير فارغة
-  if (items.isEmpty) return 0.0;
+    double calculateAverage(List items) {
+      // التحقق من أن القائمة غير فارغة
+      if (items.isEmpty) return 0.0;
 
-  // جمع القيم
-  double total = 0.0;
-  for (var item in items) {
-    total += double.tryParse(item['UserTotalMark'].toString()) ?? 0.0;
-  }
+      // جمع القيم
+      double total = 0.0;
+      for (var item in items) {
+        total += double.tryParse(item['UserTotalMark'].toString()) ?? 0.0;
+      }
 
-  // حساب المتوسط
-  double average = total / items.length;
+      // حساب المتوسط
+      double average = total / items.length;
 
-  return average;
-}
+      // اقتصار الناتج على منزلتين عشريتين
+      return double.parse(average.toStringAsFixed(2));
+    }
+
 
 void sortItems(String criteria) {
   if (items == null || items!.isEmpty) return;
@@ -71,7 +73,8 @@ void sortItems(String criteria) {
     void getMarks(courseId) async {
     print(courseId);
     var regBody = {
-      "courseId": courseId
+      "courseId": courseId,
+      "superEmail":EMAIL
     };
 
     var response = await http.post(Uri.parse(getChildrenMark),

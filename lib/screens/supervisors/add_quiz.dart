@@ -237,15 +237,18 @@ void dispose() {
       // زر Next
       ElevatedButton(
         onPressed: () {
-          if (_currentPage < 9) {
+          if (_currentPage < n) {
             //_clearFields();
             _pageController.nextPage(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
             );
           }
-        },
-        child: const Text('Next'),
+          if(_currentPage==n-1){
+            Navigator.pop(context);
+          }
+        },      
+        child: _currentPage ==(n-1) ? const Text('Finish'):const Text('Next'),
         style: ElevatedButton.styleFrom(
           backgroundColor: ourBlue, // لون زر التالي
           padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),

@@ -198,4 +198,120 @@ class BookService {
       };
     }
   }
+
+  /////////////////FAVV
+  static Future<void> addBookToFavorites(String email, String bookId) async {
+    try {
+      // Construct the request payload
+      final Map<String, String> payload = {
+        'email': email,
+        'bookId': bookId,
+      };
+
+      // Make the POST request
+      final response = await http.post(
+        Uri.parse(fav),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(payload),
+      );
+
+      // Handle the response
+      if (response.statusCode == 200) {
+        print('Book added to favorites: ${response.body}');
+      } else {
+        print('Failed to add book to favorites: ${response.body}');
+      }
+    } catch (e) {
+      print('Error adding book to favorites: $e');
+    }
+  }
+
+  static Future<void> removeBookFromFavorites(
+      String email, String bookId) async {
+    try {
+      // Construct the request payload
+      final Map<String, String> payload = {
+        'email': email,
+        'bookId': bookId,
+      };
+
+      // Make the POST request
+      final response = await http.delete(
+        Uri.parse(fav),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(payload),
+      );
+
+      // Handle the response
+      if (response.statusCode == 200) {
+        print('Book removed from favorites: ${response.body}');
+      } else {
+        print('Failed to remove book from favorites: ${response.body}');
+      }
+    } catch (e) {
+      print('Error removing book from favorites: $e');
+    }
+  }
+
+  static Future<List<dynamic>> getFavoriteBooks(String email) async {
+    try {
+      // Make the GET request with query parameters
+      final response = await http.get(
+        Uri.parse('$fav?email=$email'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      // Check if the request was successful
+      if (response.statusCode == 200) {
+        // Decode and return the list of books
+        final List<dynamic> books = jsonDecode(response.body);
+        return books;
+      } else {
+        // Throw an error if the server returned a non-200 status code
+        throw Exception('Failed to fetch favorite books: ${response.body}');
+      }
+    } catch (e) {
+      // Handle errors gracefully
+      throw Exception('Error fetching favorite books: $e');
+    }
+  }
+
+  static Future<bool> isBookInFavorites(String email, String bookId) async {
+    const String apiUrl = '$fav/check'; // Replace with your API endpoint
+
+    try {
+      // Make the GET request with query parameters
+      final response = await http.get(
+        Uri.parse('$apiUrl?email=$email&bookId=$bookId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      // Check if the request was successful
+      if (response.statusCode == 200) {
+        // Decode the response and return the "isFavorite" value
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+        if (responseData.containsKey('isFavorite') &&
+            responseData['isFavorite'] is bool) {
+          return responseData['isFavorite'];
+        } else {
+          throw Exception("Invalid response structure: ${response.body}");
+        }
+      } else {
+        // Throw an error if the server returned a non-200 status code
+        throw Exception('Failed to check favorite status: ${response.body}');
+      }
+    } catch (e) {
+      // Handle errors gracefully
+      throw Exception('Error checking favorite status: $e');
+    }
+  }
 }

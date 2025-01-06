@@ -6,16 +6,16 @@ import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
 
 class UserGrades extends StatefulWidget {
-  final String id;
-  UserGrades({required this.id,Key? key, }) : super(key: key);
+  final String childEmail;
+  UserGrades({required this.childEmail,Key? key, }) : super(key: key);
 
   @override
   _UserGradesState createState() => _UserGradesState();
 }
 
 class _UserGradesState extends State<UserGrades> {
-  late String courseId=widget.id;
-  String email=EMAIL;
+  late String childEmail=widget.childEmail;
+  //String email=EMAIL;
   List? items;
   bool isAscending = true; 
 
@@ -23,7 +23,7 @@ class _UserGradesState extends State<UserGrades> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    getAllMarks(email);
+    getAllMarks(childEmail);
   }
 
   
@@ -83,6 +83,12 @@ void sortItems(String criteria) {
         items = jsonResponse['success'];
         print('items: ${items}');
         setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content:  Text('email: $email'),
+      duration: const Duration(seconds: 1), // Set custom duration
+    ),
+  );
     } else {
         print('Error: ${response.statusCode}');
         print('Response: ${response.body}');

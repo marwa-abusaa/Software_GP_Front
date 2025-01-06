@@ -1,14 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/api/api.dart';
 import 'package:stability_image_generation/stability_image_generation.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_application_1/screens/StoryDesign/storyServices/storyService.dart';
+import 'package:flutter_application_1/config.dart';
 
 
 class AiTextToImageGenerator extends StatefulWidget {
-  const AiTextToImageGenerator({super.key});
+  const AiTextToImageGenerator({super.key, required this.onImageUploaded});
+  final Future<void> Function() onImageUploaded;
   @override
   State<AiTextToImageGenerator> createState() => _AiTextToImageGeneratorState();
 }
@@ -16,7 +20,7 @@ class AiTextToImageGenerator extends StatefulWidget {
 class _AiTextToImageGeneratorState extends State<AiTextToImageGenerator> {
   final TextEditingController _queryController = TextEditingController();
   final StabilityAI _ai = StabilityAI();
-  final String apiKey = 'sk-eqohyEr2ceu19a6SuAA8G8tExuZDS5qNuBQU6A8OyR99z8Wb';
+  final String apiKey = 'sk-wQdmQEPjdtgn5mHM5elyFblAU8TRLneRM0jSv0ecUhZaz0gS';
   ImageAIStyle selectedStyle = ImageAIStyle.anime;
   bool isItems = false;
 
@@ -29,6 +33,20 @@ class _AiTextToImageGeneratorState extends State<AiTextToImageGenerator> {
     ImageAIStyle.medievalStyle,
     ImageAIStyle.render3D,
   ];
+  
+
+  // Function to upload image to Firebase Storage and get the download URL
+  Future<String?> uploadImage(File image) async {
+    try {
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      final storageRef = APIS.storage.ref().child('storyImages/$fileName');
+      await storageRef.putFile(image);
+      return await storageRef.getDownloadURL();
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
   
 Future<void> _saveImageWithName(Uint8List image, String name) async {
   try {
@@ -44,6 +62,34 @@ Future<void> _saveImageWithName(Uint8List image, String name) async {
         // Save the image to the device
         final file = File(imagePath);
         await file.writeAsBytes(image);
+
+      
+      // Upload image to Firebase
+      final downloadUrl = await uploadImage(file);
+      if (downloadUrl != null) {
+        await addImage(downloadUrl, EMAIL, "", "");
+        await widget.onImageUploaded();
+        print("After upload image im here");
+           ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("After upload image im here")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload image')),
+        );
+      }
+
+      if (downloadUrl != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Image uploaded to Firebase')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload image to Firebase.')),
+        );
+      }
+
+
 
         // Notify user
         ScaffoldMessenger.of(context).showSnackBar(

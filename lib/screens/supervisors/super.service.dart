@@ -167,3 +167,122 @@ Future<List<dynamic>> getAllMyChildren(String superEmail) async {
     throw Exception("Error: $e");
   }
 }
+
+Future<List<dynamic>> searchUsers(String searchTerm, String superEmail) async {
+  // Replace with your API base URL
+
+  try {
+    // Construct the URL with query parameters
+    final Uri url = Uri.parse(
+        '$searchChildren?searchTerm=$searchTerm&superEmail=$superEmail');
+
+    // Send the GET request
+    final http.Response response = await http.get(url);
+
+    // Check if the response is successful
+    if (response.statusCode == 200) {
+      // Parse the JSON response
+      final data = json.decode(response.body);
+
+      // Extract users from the response and return
+      return data['users'] as List<dynamic>;
+    } else if (response.statusCode == 400) {
+      throw Exception(json.decode(response.body)['message']);
+    } else {
+      throw Exception('Error: ${response.statusCode} ${response.body}');
+    }
+  } catch (e) {
+    // Handle exceptions
+    throw Exception('An error occurred: $e');
+  }
+}
+
+Future<void> incrementCreatedStory(String email) async {
+  final Uri apiUrl =
+      Uri.parse('$child/story'); // Replace with your API endpoint
+
+  try {
+    // Send POST request
+    final response = await http.post(
+      apiUrl,
+      headers: {
+        'Content-Type': 'application/json', // Set the content type to JSON
+      },
+      body: json.encode({
+        'email': email, // Pass the email in the request body
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Successfully incremented the story number
+      final responseData = json.decode(response.body);
+      print('Response: ${responseData['data']}');
+    } else {
+      // Handle error based on status code
+      final responseData = json.decode(response.body);
+      print('Error: ${responseData['error']}');
+    }
+  } catch (error) {
+    print('Error: $error');
+  }
+}
+
+Future<void> incrementContest(String email) async {
+  final Uri apiUrl =
+      Uri.parse('$child/contest'); // Replace with your API endpoint
+
+  try {
+    // Send POST request
+    final response = await http.post(
+      apiUrl,
+      headers: {
+        'Content-Type': 'application/json', // Set the content type to JSON
+      },
+      body: json.encode({
+        'email': email, // Pass the email in the request body
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Successfully incremented the story number
+      final responseData = json.decode(response.body);
+      print('Response: ${responseData['data']}');
+    } else {
+      // Handle error based on status code
+      final responseData = json.decode(response.body);
+      print('Error: ${responseData['error']}');
+    }
+  } catch (error) {
+    print('Error: $error');
+  }
+}
+
+Future<void> incrementCourse(String email) async {
+  final Uri apiUrl =
+      Uri.parse('$child/story'); // Replace with your API endpoint
+
+  try {
+    // Send POST request
+    final response = await http.post(
+      apiUrl,
+      headers: {
+        'Content-Type': 'application/json', // Set the content type to JSON
+      },
+      body: json.encode({
+        'email': email, // Pass the email in the request body
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Successfully incremented the story number
+      final responseData = json.decode(response.body);
+      print('Response: ${responseData['data']}');
+    } else {
+      // Handle error based on status code
+      final responseData = json.decode(response.body);
+      print('Error: ${responseData['error']}');
+    }
+  } catch (error) {
+    print('Error: $error');
+  }
+}

@@ -1,22 +1,39 @@
-// BookCard Widget with Press Effect
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/books/BookDetailsPage.dart';
 
 class BookCard extends StatelessWidget {
   final String title;
   final String imagePath;
+  final String? publishDate; // Mark publishDate as nullable
 
   const BookCard({
     Key? key,
     required this.title,
     required this.imagePath,
+    this.publishDate,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Default current date for comparison
+    final currentDate = DateTime.now();
+    // Initialize difference variable to null if publishDate is invalid
+    int difference = 0;
+
+    // If publishDate is not null, parse it and calculate the difference
+    if (publishDate != null && publishDate!.isNotEmpty) {
+      try {
+        DateTime parsedDate = DateTime.parse(publishDate!);
+        difference = currentDate.difference(parsedDate).inDays;
+      } catch (e) {
+        // Handle invalid date format
+        print("Invalid date format: $e");
+      }
+    }
+
     return InkWell(
       onTap: () {
-        // Add any action you want to perform when the book card is tapped.
+        // Navigate to the book details page on tap
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -31,14 +48,30 @@ class BookCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
         child: Column(
           children: [
-            // Book Cover Image
+            // Show "NEW BOOK" if the book was published less than 5 days ago
+            if (difference < 5)
+              Container(
+                padding: const EdgeInsets.all(4.0),
+                color: Colors.green,
+                child: const Text(
+                  'NEW BOOK',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            const SizedBox(height: 5),
+
+            // Book cover image
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   image: DecorationImage(
-                    image: NetworkImage(
-                        imagePath), // Use NetworkImage instead of AssetImage
+                    image: NetworkImage(imagePath),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.circular(8.0),
@@ -47,7 +80,7 @@ class BookCard extends StatelessWidget {
             ),
             const SizedBox(height: 5),
 
-            // Book Title at the bottom
+            // Book title at the bottom
             Text(
               title,
               textAlign: TextAlign.center,

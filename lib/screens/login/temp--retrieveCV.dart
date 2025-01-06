@@ -81,6 +81,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 pdfUrl: cvUrl,
                                 title:
                                     getUsernameFromEmail(widget.email) + "Cv ",
+                                    author:getUsernameFromEmail(widget.email) ,
                               ),
                             ),
                           );

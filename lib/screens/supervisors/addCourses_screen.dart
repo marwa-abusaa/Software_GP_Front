@@ -288,7 +288,7 @@ class _AddCoursesScreenState extends State<AddCoursesScreen> {
                   decoration: const InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    hintText: "Course Type",
+                    hintText: "Course Type: video/website",
                     hintStyle: TextStyle(
                       fontSize: 15.0, 
                       color: Colors.grey, 

@@ -2,12 +2,16 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart' as auth;
-import 'package:googleapis/servicecontrol/v1.dart' as servicecontrol;
 
 class NotificationService {
   static Future<void> subscribeToTopic() async {
     await FirebaseMessaging.instance.subscribeToTopic('all');
     print("User subscribed to topic: all");
+  }
+
+  static Future<void> unsubscribeFromTopic() async {
+    await FirebaseMessaging.instance.unsubscribeFromTopic('all');
+    print("Device unsubscribed from topic: all");
   }
 
   static Future<String> getAccessToken() async {

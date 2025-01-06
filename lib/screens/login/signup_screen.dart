@@ -24,6 +24,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool agreePersonalData = true;
   bool isSupervisor = false; // New variable to track supervisor state
   String? cvFilePath; // Variable to hold the CV file path
+  bool isPasswordVisible = false; 
 
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -376,7 +377,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // Password
                         TextFormField(
                           controller: passwordController,
-                          obscureText: true,
+                          obscureText: !isPasswordVisible,
                           obscuringCharacter: '•',
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -395,6 +396,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             prefixIcon: const Icon(Icons.lock),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
+                            ),
+                              suffixIcon: IconButton(
+                              icon: Icon(
+                                isPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: ourPink,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  isPasswordVisible = !isPasswordVisible;
+                                });
+                              },
                             ),
                           ),
                         ),

@@ -74,7 +74,10 @@ dependencies:
   flutter_sound: ^9.17.4
   googleapis: ^13.2.0
   googleapis_auth: ^1.4.0
-
+  speech_to_text: ^7.0.0
+  auto_size_text: ^3.0.0
+  syncfusion_flutter_pdf: ^27.1.58
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -129,6 +132,9 @@ flutter:
     - assets/images/contest.png
     - assets/images/contest2.png
     - assets/story-example.pdf
+    - assets/images/test.mp3
+    - assets/images/winner.jpg
+    - assets/images/adv_winner.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

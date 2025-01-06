@@ -7,14 +7,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/config.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart'; // For TapGestureRecognizer
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 
 
 class AllCourseDetailsScreen extends StatefulWidget {
   final String id;
-  AllCourseDetailsScreen({required this.id,Key? key}) : super(key: key);
+  final  linkk;
+  AllCourseDetailsScreen({required this.id,required this.linkk,Key? key}) : super(key: key);
 
   @override
   State<AllCourseDetailsScreen> createState() => _AllCourseDetailsScreenState();
@@ -26,6 +29,10 @@ class _AllCourseDetailsScreenState extends State<AllCourseDetailsScreen> {
   String email=EMAIL;
   bool isAttempt=false;
   bool isQuiz=false;
+
+  //URL of th YouTube Video
+ late final videoURL = widget.linkk;
+late YoutubePlayerController playerController;
 
  void getQuestions(String courseId) async {
   print(courseId);
@@ -80,29 +87,55 @@ class _AllCourseDetailsScreenState extends State<AllCourseDetailsScreen> {
       }
     
   }
-  
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    // Map<String,dynamic> jwtDecodedToken = JwtDecoder.decode(widget.token);
-
-    // supervisorId = jwtDecodedToken['_id'];
-    getCourseDetails(courseId);
-    checkAttempt();
-    getQuestions(courseId);
-    getMyGrade(email,courseId);
+  // Method to seek forward 10 seconds
+  void seekForward() {
+    final currentPosition = playerController.value.position;
+    final duration = playerController.value.metaData.duration;
+    if (currentPosition.inSeconds + 10 < duration.inSeconds) {
+      playerController.seekTo(
+        currentPosition + const Duration(seconds: 10),
+      );
+    }
+  }
+  // Method to seek backward 10 seconds
+  void seekBackward() {
+    final currentPosition = playerController.value.position;
+    if (currentPosition.inSeconds - 10 > 0) {
+      playerController.seekTo(currentPosition - const Duration(seconds: 10));
+    }
   }
 
-void _launchURL(String url) async {
-  print(url);
-  final Uri uri = Uri.parse(url);
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri);
+ @override
+void initState() {
+  super.initState();
+
+  // استدعاء الدوال الأخرى
+  getCourseDetails(courseId);
+  checkAttempt();
+  getQuestions(courseId);
+  getMyGrade(email, courseId);
+
+  //// الفيديو
+  if (videoURL.contains("youtu.be")) {
+    final videoId = YoutubePlayer.convertUrlToId(videoURL);
+
+    if (videoId != null) {
+      // تهيئة وحدة التحكم بالفيديو
+      playerController = YoutubePlayerController(
+        initialVideoId: videoId,
+        flags: const YoutubePlayerFlags(
+          autoPlay: false, // عدم تشغيل الفيديو تلقائياً
+        ),
+      );
+    } else {
+      debugPrint("تعذر استخراج معرف الفيديو من الرابط: $videoURL");
+    }
   } else {
-    throw 'Could not launch $url';
+    debugPrint("الرابط لا يحتوي على 'youtu.be': $videoURL");
   }
 }
+
+
 
 
 
@@ -362,10 +395,11 @@ Widget build(BuildContext context) {
                                 ),
                                 TextSpan(
                                   text: '$link', // This part will have the second color
-                                  style: const TextStyle(fontSize: 22, color: Colors.black,fontFamily: 'Times New Roman'),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = () {
-                                      _launchURL(link); // Call the launch URL function when tapped
+                                  style: const TextStyle(fontSize: 22, color: Color.fromARGB(255, 23, 127, 211),fontFamily: 'Times New Roman',decoration: TextDecoration.underline),
+                                 recognizer: TapGestureRecognizer()
+                                 ..onTap = () {
+                                   final Uri url = Uri.parse(link);
+                                  launchUrl(url);
                                     },
                                 ),
                               ],
@@ -376,6 +410,92 @@ Widget build(BuildContext context) {
 
                     ),
                     const SizedBox(height: 5.0), 
+                    if(link.contains("youtu.be"))
+                       const Positioned(
+                      // top: 20,
+                      // left: 20,
+                      // right: 20,
+                      child: Center(
+                        child: Text(
+                          "Or Show the video here",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: ourBlue,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black26,
+                                blurRadius: 5,
+                                offset: Offset(2, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                   const SizedBox(height: 5.0), 
+                   if(link.contains("youtu.be"))
+                 Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: ourBlue, // لون الإطار
+                          width: 4,                // عرض الإطار
+                        ),
+                        borderRadius: BorderRadius.circular(10), // زوايا دائرية
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26, // لون الظل
+                            blurRadius: 8,         // مدى انتشار الظل
+                            offset: Offset(2, 2),  // اتجاه الظل
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10), // نفس الزوايا للإطار
+                        child: YoutubePlayer(controller: playerController),
+                      ),
+                    ),
+                    Positioned(
+                      top: 100, right: 100, left: 100, bottom: 100,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            onPressed: seekBackward,
+                            icon: const Icon(
+                              Icons.replay_10,
+                              size: 30,
+                              color: Colors.white54,
+                            ),
+                          ),
+                          const SizedBox(width: 30),
+                          IconButton(
+                            onPressed: seekForward,
+                            icon: const Icon(
+                              Icons.forward_10,
+                              size: 30,
+                              color: Colors.white54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                    const SizedBox(height: 25.0),
+                    if(link.contains("youtu.be"))
+                     const Divider(
+                            color: ourPink,
+                            thickness: 3,
+                            height: 20,
+                            indent: 18.0,  // Empty space to the left of the line.
+                          endIndent: 18.0,
+                          ), 
+                          const SizedBox(height: 20.0),
                     Row(
                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [

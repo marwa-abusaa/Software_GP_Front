@@ -1,6 +1,10 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/config.dart';
+import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:flutter_application_1/screens/books/BookService%20.dart';
+import 'package:flutter_application_1/screens/books/addBookPage.dart';
+import 'package:flutter_application_1/screens/users/follow/follow.service.dart';
 import 'package:flutter_application_1/widgets/bookCard.dart';
 
 class BookHomePage extends StatefulWidget {
@@ -21,6 +25,8 @@ class _BookHomePageState extends State<BookHomePage> {
   // This will hold books categorized by their categories
   Map<String, List<dynamic>> booksByCategory = {
     'All Categories': [],
+    'Favorites': [],
+    'Followed users\' books': [],
     'Science': [],
     'Poetry': [],
     'History': [],
@@ -61,6 +67,10 @@ class _BookHomePageState extends State<BookHomePage> {
 
     if (category == 'All Categories') {
       books = await BookService.getAllBooks();
+    } else if (category == 'Favorites') {
+      books = await BookService.getFavoriteBooks(EMAIL);
+    } else if (category == 'Followed users\' books') {
+      books = await getFollowingBooks(EMAIL);
     } else {
       books = await BookService.searchCategory(category);
     }
@@ -72,6 +82,8 @@ class _BookHomePageState extends State<BookHomePage> {
 
   final List<String> categories = [
     'All Categories',
+    'Favorites',
+    'Followed users\' books',
     'Science',
     'Poetry',
     'History',
@@ -81,15 +93,29 @@ class _BookHomePageState extends State<BookHomePage> {
     'novels',
   ];
 
-  List<String> searchResults = []; // New list for search results
+  List<Map<String, dynamic>> searchResults = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: offwhite,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: ourPink,
         elevation: 0,
         centerTitle: true,
+        actions: ROLE != 'user'
+            ? [
+                IconButton(
+                  icon: Icon(Icons.add), // Replace with your desired icon
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddBookPage()),
+                    );
+                  },
+                ),
+              ]
+            : null, // If the role is 'user', no actions are displayed
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -141,10 +167,12 @@ class _BookHomePageState extends State<BookHomePage> {
                   height: 220,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
-                    children: searchResults.map((title) {
+                    children: searchResults.map((book) {
                       return BookCard(
-                        title: title,
-                        imagePath: 'assets/images/howNotToDie.jpg',
+                        title: book['title'],
+                        imagePath: book['image'],
+                        publishDate: book[
+                            'publishDate'], // Add this if the BookCard supports it
                       );
                     }).toList(),
                   ),
@@ -171,6 +199,7 @@ class _BookHomePageState extends State<BookHomePage> {
                       title: book['name'], // Display the book name
                       imagePath:
                           book['image'], // Pass the image URL if available
+                      publishDate: book['publishDate'],
                     );
                   },
                 ),
@@ -179,6 +208,10 @@ class _BookHomePageState extends State<BookHomePage> {
 
               // Categories List with Expandable Books
               ...categories
+                  .where((category) =>
+                      !(category == 'Favorites' ||
+                          category == 'Followed users\' books') ||
+                      ROLE == 'user')
                   .map((category) => categoryWithBooks(category))
                   .toList(),
             ],
@@ -274,7 +307,6 @@ class _BookHomePageState extends State<BookHomePage> {
     );
   }
 
-  // Apply filter logic and update search results
   void _applyFilter() async {
     searchResults.clear(); // Clear previous results
     try {
@@ -289,8 +321,16 @@ class _BookHomePageState extends State<BookHomePage> {
       log('Fetched books: ${books.toString()}');
 
       setState(() {
-        // Map each book to its 'name' and cast to List<String>
-        searchResults = books.map((book) => book['name'] as String).toList();
+        // Map each book to a map with title, image, and publishDate
+        searchResults = books.map((book) {
+          return {
+            'title': book['name'] as String,
+            'image':
+                book['image'] as String, // Ensure this field exists in the data
+            'publishDate': book['publishDate']
+                as String, // Ensure this field exists in the data
+          };
+        }).toList();
         log('Search results after filter: ${searchResults.toString()}');
       });
     } catch (error) {
@@ -315,6 +355,7 @@ class _BookHomePageState extends State<BookHomePage> {
             }
           },
           child: Card(
+            color: Colors.teal,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
@@ -354,6 +395,7 @@ class _BookHomePageState extends State<BookHomePage> {
                   return BookCard(
                     title: book['name'], // Display the book name
                     imagePath: book['image'],
+                    publishDate: book['publishDate'],
                   );
                 }).toList(),
               ),

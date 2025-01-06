@@ -127,7 +127,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                    Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>  AllCourseDetailsScreen(id: '${items![index]['_id']}',),
+                                      builder: (context) =>  AllCourseDetailsScreen(id: '${items![index]['_id']}',linkk: '${items![index]['link']}'),
                                     ),
                                   );
                                 },

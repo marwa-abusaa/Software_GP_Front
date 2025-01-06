@@ -64,6 +64,8 @@ class _SignInScreenState extends State<SignInScreen> {
                 email: emailController.text, password: passwordController.text);
 
             APIS.initializeEmail(emailController.text);
+            await APIS.getSelfInfo();
+            print("User info (push token) updated successfully");
           } catch (e) {
             print(e);
           }
@@ -84,9 +86,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         token: myToken,
                       )),
             );
-            // CompetitionsScreen();
-            // HomeScreen();
           } else if (role == "supervisor") {
+            await NotificationService.unsubscribeFromTopic();
+
             Navigator.push(
               context,
               MaterialPageRoute(

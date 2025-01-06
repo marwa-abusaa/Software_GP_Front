@@ -155,8 +155,9 @@ class _BooksPageState extends State<MyBooksPage> {
                     final book = publishedBooks[index];
                     return BookCard(
                       title: book['name'], // Display the book name
-                      imagePath:
-                          book['image'], // Pass the image URL if available
+                      imagePath: book['image'],
+                      publishDate: book[
+                          'publishDate'], // Pass the image URL if available
                     );
                   },
                 ),
@@ -265,6 +266,7 @@ class _BooksPageState extends State<MyBooksPage> {
                                           builder: (context) => PdfViewerScreen(
                                             pdfUrl: book['pdfLink'],
                                             title: book['name'],
+                                            author: book['author'],
                                           ),
                                         ),
                                       );

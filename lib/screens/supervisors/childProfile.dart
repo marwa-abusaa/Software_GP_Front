@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api/info.dart';
+import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:flutter_application_1/screens/books/BookService%20.dart';
 import 'package:flutter_application_1/widgets/bookCard.dart';
@@ -23,9 +24,34 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
 
   Future<void> _fetchMypublishedBooks() async {
     List? books = await BookService.getMyPublishedBooks(widget.email);
-    setState(() {
-      publishedBooks = books!;
-    });
+
+    // Sort the books by publishDate from newest to oldest
+    if (books != null) {
+      books.sort((a, b) {
+        // Check if publishDate is null for either book
+        DateTime? dateA = a['publishDate'] != null
+            ? DateTime.tryParse(a['publishDate'])
+            : null;
+        DateTime? dateB = b['publishDate'] != null
+            ? DateTime.tryParse(b['publishDate'])
+            : null;
+
+        // If either date is null, place it at the end (you can change the behavior here if needed)
+        if (dateA == null && dateB == null) {
+          return 0; // Both are null, no change in order
+        } else if (dateA == null) {
+          return 1; // Null dateA comes after valid dateB
+        } else if (dateB == null) {
+          return -1; // Null dateB comes after valid dateA
+        } else {
+          return dateB.compareTo(dateA); // Sort by date (newest first)
+        }
+      });
+
+      setState(() {
+        publishedBooks = books;
+      });
+    }
   }
 
   // Method to fetch user image and full name together
@@ -117,25 +143,26 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                   ),
 
                   // Second Part: User Progress
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Card(
-                      color: offwhite,
-                      child: ListTile(
-                        title: const Text("User Progress"),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                                "Created Stories: ${userProgress['createdStroryNum']}"),
-                            Text("Contests: ${userProgress['contestsNum']}"),
-                            Text("Courses: ${userProgress['coursesNum']}"),
-                            Text("Points: ${userProgress['points']}"),
-                          ],
+                  if (ROLE != 'user')
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Card(
+                        color: offwhite,
+                        child: ListTile(
+                          title: const Text("User Progress"),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  "Created Stories: ${userProgress['createdStroryNum']}"),
+                              Text("Contests: ${userProgress['contestsNum']}"),
+                              Text("Courses: ${userProgress['coursesNum']}"),
+                              Text("Points: ${userProgress['points']}"),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
                   // Third Part: Published Books (this is your part to implement)
                   // Add your code to display the published books here
@@ -164,8 +191,9 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                                         return BookCard(
                                           title: book[
                                               'name'], // Display the book name
-                                          imagePath: book[
-                                              'image'], // Pass the image URL if available
+                                          imagePath: book['image'],
+                                          publishDate: book[
+                                              'publishDate'], // Pass the image URL if available
                                         );
                                       },
                                     ),
