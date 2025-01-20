@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
+import 'package:flutter_application_1/screens/admin/adminservices.dart';
 import 'package:flutter_application_1/screens/books/BookService%20.dart';
 import 'package:flutter_application_1/screens/books/addBookPage.dart';
 import 'package:flutter_application_1/screens/users/follow/follow.service.dart';
@@ -21,24 +22,45 @@ class _BookHomePageState extends State<BookHomePage> {
   String filterTitle = '';
   String filterAuthor = '';
   double filterRating = 0.0;
+  bool isLoading = true; // Track the loading state
 
-  // This will hold books categorized by their categories
-  Map<String, List<dynamic>> booksByCategory = {
-    'All Categories': [],
-    'Favorites': [],
-    'Followed users\' books': [],
-    'Science': [],
-    'Poetry': [],
-    'History': [],
-    'Psychology': [],
-    'Fiction': [],
-    'self-help': [],
-    'novels': [],
-  };
+  // Predefined categories
+  final List<String> predefinedCategories = [
+    'All Categories',
+    'Favorites',
+    'Followed users\' books',
+  ];
+
+// This will hold books categorized by their categories
+  Map<String, List<dynamic>> booksByCategory = {};
+  late List<String> categories;
+
+  // Function to fetch categories from the database and initialize structures
+  Future<void> initializeCategories() async {
+    try {
+      // Fetch categories from the database
+      final List<String> fetchedCategories = await fetchCategories();
+
+      // Combine predefined categories with fetched ones
+      categories = [...predefinedCategories, ...fetchedCategories];
+
+      // Initialize booksByCategory map
+      booksByCategory = {
+        for (var category in categories) category: [],
+      };
+    } catch (e) {
+      print('Failed to fetch categories: $e');
+    } finally {
+      setState(() {
+        isLoading = false; // Update loading state
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    initializeCategories();
     _fetchTopRatedBooks();
   }
 
@@ -80,19 +102,6 @@ class _BookHomePageState extends State<BookHomePage> {
     });
   }
 
-  final List<String> categories = [
-    'All Categories',
-    'Favorites',
-    'Followed users\' books',
-    'Science',
-    'Poetry',
-    'History',
-    'Psychology',
-    'Fiction',
-    'self-help',
-    'novels',
-  ];
-
   List<Map<String, dynamic>> searchResults = [];
 
   @override
@@ -101,12 +110,14 @@ class _BookHomePageState extends State<BookHomePage> {
       backgroundColor: offwhite,
       appBar: AppBar(
         backgroundColor: ourPink,
+         iconTheme: const IconThemeData(color: Colors.white),
+          title: const Text('All Stories', style: TextStyle(color: Colors.white),),
         elevation: 0,
         centerTitle: true,
         actions: ROLE != 'user'
             ? [
                 IconButton(
-                  icon: Icon(Icons.add), // Replace with your desired icon
+                  icon: const Icon(Icons.add), // Replace with your desired icon
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -117,107 +128,111 @@ class _BookHomePageState extends State<BookHomePage> {
               ]
             : null, // If the role is 'user', no actions are displayed
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: GestureDetector(
-                  onTap: _showFilterDialog, // Show filter dialog on tap
-                  child: TextField(
-                    enabled: false, // Disable typing; tap to open dialog
-                    decoration: InputDecoration(
-                      hintText: 'Search books...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator()) // Show loading indicator
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Search Bar
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: GestureDetector(
+                        onTap: _showFilterDialog, // Show filter dialog on tap
+                        child: TextField(
+                          enabled: false, // Disable typing; tap to open dialog
+                          decoration: InputDecoration(
+                            hintText: 'Search books...',
+                            prefixIcon: const Icon(Icons.search),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-              // Display Search Results if any
-              if (searchResults.isNotEmpty) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                    // Display Search Results if any
+                    if (searchResults.isNotEmpty) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Search Results:',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              setState(() {
+                                searchResults.clear(); // Clear search results
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        height: 220,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: searchResults.map((book) {
+                            return BookCard(
+                              title: book['title'],
+                              imagePath: book['image'],
+                              publishDate: book[
+                                  'publishDate'], // Add this if the BookCard supports it
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // Book List (Scrollable Horizontally) - Most Popular
                     const Text(
-                      'Search Results:',
+                      'Top Rated:',
                       style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          TextStyle(fontSize: 19, fontWeight: FontWeight.bold,color: Color.fromARGB(255, 255, 194, 52)),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () {
-                        setState(() {
-                          searchResults.clear(); // Clear search results
-                        });
-                      },
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 220,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _topRatedBooks
+                            .length, // Use the length of the fetched books
+                        itemBuilder: (context, index) {
+                          final book = _topRatedBooks[index];
+
+                          return BookCard(
+                            title: book['name'], // Display the book name
+                            imagePath: book[
+                                'image'], // Pass the image URL if available
+                            publishDate: book['publishDate'],
+                          );
+                        },
+                      ),
                     ),
+                    const SizedBox(height: 20),
+
+                    // Categories List with Expandable Books
+                    ...categories
+                        .where((category) =>
+                            !(category == 'Favorites' ||
+                                category == 'Followed users\' books') ||
+                            ROLE == 'user')
+                        .map((category) => categoryWithBooks(category))
+                        .toList(),
                   ],
                 ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 220,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: searchResults.map((book) {
-                      return BookCard(
-                        title: book['title'],
-                        imagePath: book['image'],
-                        publishDate: book[
-                            'publishDate'], // Add this if the BookCard supports it
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              // Book List (Scrollable Horizontally) - Most Popular
-              const Text(
-                'Top Rated:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 220,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _topRatedBooks
-                      .length, // Use the length of the fetched books
-                  itemBuilder: (context, index) {
-                    final book = _topRatedBooks[index];
-
-                    return BookCard(
-                      title: book['name'], // Display the book name
-                      imagePath:
-                          book['image'], // Pass the image URL if available
-                      publishDate: book['publishDate'],
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Categories List with Expandable Books
-              ...categories
-                  .where((category) =>
-                      !(category == 'Favorites' ||
-                          category == 'Followed users\' books') ||
-                      ROLE == 'user')
-                  .map((category) => categoryWithBooks(category))
-                  .toList(),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
@@ -287,17 +302,17 @@ class _BookHomePageState extends State<BookHomePage> {
               ],
             ),
           ),
-          actions: [
+          actions: [           
             TextButton(
-              child: const Text('Apply'),
+              child: const Text('Cancel',style: TextStyle(color: Colors.black,fontSize: 14)),
               onPressed: () {
-                _applyFilter(); // Apply filter logic
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
-              child: const Text('Cancel'),
+             TextButton(
+              child: const Text('Apply',style: TextStyle(color: ourPink,fontSize: 17),),
               onPressed: () {
+                _applyFilter(); // Apply filter logic
                 Navigator.of(context).pop();
               },
             ),
@@ -363,12 +378,13 @@ class _BookHomePageState extends State<BookHomePage> {
                 children: [
                   Text(
                     category,
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(fontSize: 16,color: Colors.black,),
                   ),
                   Icon(
                     selectedCategory == category
                         ? Icons.arrow_drop_up
                         : Icons.arrow_drop_down,
+                        color: Colors.black,
                   ),
                 ],
               ),

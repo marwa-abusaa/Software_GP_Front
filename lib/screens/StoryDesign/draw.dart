@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_application_1/api/api.dart';
 import 'package:flutter_application_1/config.dart';
+import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:flutter_application_1/screens/StoryDesign/storyServices/storyService.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'dart:ui' as ui;
@@ -201,6 +202,8 @@ class _DrawingRoomScreenState extends State<DrawingRoomScreen> {
             child: RotatedBox(
               quarterTurns: 3,
               child: Slider(
+                activeColor: ourBlue, // لون الجزء النشط
+                inactiveColor: Colors.grey,
                 value: selectedWidth,
                 min: 1,
                 max: 20,
@@ -221,6 +224,7 @@ class _DrawingRoomScreenState extends State<DrawingRoomScreen> {
               children: [
                 // Clear Canvas Button
                 FloatingActionButton(
+                  backgroundColor: const Color.fromARGB(255, 236, 172, 172),
                   heroTag: "Clear",
                   onPressed: () {
                     setState(() {
@@ -229,11 +233,12 @@ class _DrawingRoomScreenState extends State<DrawingRoomScreen> {
                       redoHistory.clear();
                     });
                   },
-                  child: const Icon(Icons.delete, color: Colors.red),
+                  child: const Icon(Icons.delete, color: Color.fromARGB(255, 251, 100, 89)),
                 ),
                 const SizedBox(width: 16),
                 // Undo Button
                 FloatingActionButton(
+                  backgroundColor: const Color.fromARGB(255, 236, 172, 172),
                   heroTag: "Undo",
                   onPressed: () {
                     if (drawableElements.isNotEmpty) {
@@ -248,6 +253,7 @@ class _DrawingRoomScreenState extends State<DrawingRoomScreen> {
                 const SizedBox(width: 16),
                 // Redo Button
                 FloatingActionButton(
+                  backgroundColor: const Color.fromARGB(255, 236, 172, 172),
                   heroTag: "Redo",
                   onPressed: () {
                     if (redoHistory.isNotEmpty) {
@@ -262,6 +268,7 @@ class _DrawingRoomScreenState extends State<DrawingRoomScreen> {
                 const SizedBox(width: 16),
                 // Save Button
                 FloatingActionButton(
+                  backgroundColor: const Color.fromARGB(255, 236, 172, 172),
                   heroTag: "Save Image",
                   onPressed: saveImage,
                   child: const Icon(Icons.save_alt),

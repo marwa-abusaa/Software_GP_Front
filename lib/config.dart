@@ -1,4 +1,4 @@
-const url = 'http://192.168.68.112:3000/';
+const url = 'http://192.168.68.109:3000/';
 const registration = "${url}reg";
 const login = '${url}login';
 const resetPasswordAPI = '${url}forgetPass';
@@ -90,3 +90,13 @@ const all_children = "${url}all-children";
 const progress = "${url}progress";
 const notActive = "${url}notActive";
 const activate = "${url}activate";
+
+//marwa
+const all_users = "${url}all-supervisors";
+
+//aya
+const searchActive = "${url}search-notActive";
+const categories = "${url}categories";
+const progressAdmin = "${url}admin/progress";
+const gender_statistics = "${url}gender-statistics";
+const age_statistics = "${url}age-statistics";

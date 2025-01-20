@@ -56,7 +56,7 @@ class _ContestsScreenState extends State<ContestsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Join $contestName'),
+          title: Text('Join $contestName',style: TextStyle(color: ourBlue),),
           content: SingleChildScrollView(
             // Wrap content in SingleChildScrollView
             child: Column(
@@ -102,9 +102,18 @@ class _ContestsScreenState extends State<ContestsScreen> {
               onPressed: () {
                 Navigator.pop(context); // Close the dialog
               },
-              child: const Text('Cancel'),
+              child: const Text('Cancel',style: TextStyle(color: Colors.red)),
             ),
             ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                 backgroundColor: ourBlue,
+                 fixedSize: Size(
+                 MediaQuery.of(context).size.width * 0.2, 25, ),
+                  shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15), ),
+                  padding: EdgeInsets.zero,
+                  ),
+
               onPressed: () async {
                 // Handle "Join" logic here
                 print('Selected Book: $selectedBook');
@@ -218,7 +227,7 @@ class _ContestsScreenState extends State<ContestsScreen> {
                         Navigator.of(context).pop();
                       },
                     ),
-                    const SizedBox(width: 77.0),
+                    const SizedBox(width: 100.0),
                     const Text(
                       'Contests',
                       style: TextStyle(
@@ -243,7 +252,7 @@ class _ContestsScreenState extends State<ContestsScreen> {
                             itemCount: items!.length,
                             itemBuilder: (BuildContext context, int index,
                                 int realIndex) {
-                              return _competitionCard(index);
+                              return SingleChildScrollView(child: _competitionCard(index));
                             },
                             options: CarouselOptions(
                               enlargeCenterPage: true,
@@ -251,7 +260,7 @@ class _ContestsScreenState extends State<ContestsScreen> {
                               autoPlay:
                                   selectedCardIndex != null ? false : true,
                               height: selectedCardIndex != null
-                                  ? 700 // Height for the expanded card
+                                  ? 600 // Height for the expanded card
                                   : 370, // Default height for other cards
                             ),
                           ),
@@ -337,152 +346,154 @@ class _ContestsScreenState extends State<ContestsScreen> {
             if (items![index]['isExpanded'])
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Icon(Icons.info, color: Colors.black54),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '${items![index]['description']}',
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.black54),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_today, color: Colors.black54),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Submit date: ${items![index]['submit_date']}',
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.black54),
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Add other details here
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_today, color: Colors.black54),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Voting starts on: ${items![index]['voting_start_date']}',
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.black54),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_today, color: Colors.black54),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Voting ends on: ${items![index]['voting_end_date']}',
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.black54),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.star_rate_rounded,
-                            color: Colors.black54),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Required score: ${items![index]['required_score']}',
-                          style: const TextStyle(
-                              fontSize: 14, color: Colors.black54),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            contestId = '${items![index]['_id']}';
-                            print('contestId: ' + contestId);
-                            if (_isJoinActive(items![index]['submit_date'])) {
-                              // If voting is active, navigate to the HomeScreen
-                              showJoinPopup(
-                                  context, '${items![index]['title']}');
-                            } else {
-                              // If voting is not active, show the error snackbar
-                              showErrorSnackbar('You can\'t join, time is out');
-                            }
-                          },
-                          icon: const Icon(Icons.group, color: Colors.white),
-                          label: const Text('Join contest'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                _isJoinActive(items![index]['submit_date'])
-                                    ? const Color.fromARGB(255, 77, 152, 189)
-                                    : const Color.fromARGB(255, 40, 84, 106)
-                                        .withOpacity(0.5),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 7),
-                            textStyle: const TextStyle(fontSize: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.info, color: Colors.black54),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${items![index]['description']}',
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.black54),
                             ),
                           ),
-                        ),
-                        ElevatedButton.icon(
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, color: Colors.black54),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Submit date: ${items![index]['submit_date']}',
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.black54),
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Add other details here
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, color: Colors.black54),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Voting starts on: ${items![index]['voting_start_date']}',
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.black54),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, color: Colors.black54),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Voting ends on: ${items![index]['voting_end_date']}',
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.black54),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.star_rate_rounded,
+                              color: Colors.black54),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Required score: ${items![index]['required_score']}',
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black54),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton.icon(
                             onPressed: () {
-                              if (_isVotingActive(
-                                  items![index]['voting_start_date'],
-                                  items![index]['voting_end_date'])) {
-                                //If voting is active, navigate to the HomeScreen
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        ContestParticipantsScreen(
-                                      contestName: items![index]['title'],
-                                    ),
-                                  ),
-                                );
+                              contestId = '${items![index]['_id']}';
+                              print('contestId: ' + contestId);
+                              if (_isJoinActive(items![index]['submit_date'])) {
+                                // If voting is active, navigate to the HomeScreen
+                                showJoinPopup(
+                                    context, '${items![index]['title']}');
                               } else {
                                 // If voting is not active, show the error snackbar
-                                showErrorSnackbar(
-                                    'You can\'t vote, pay attention to the time');
+                                showErrorSnackbar('You can\'t join, time is out');
                               }
                             },
-                            icon: const Icon(Icons.ballot, color: Colors.white),
-                            label: const Text('Vote'),
+                            icon: const Icon(Icons.group, color: Colors.white),
+                            label: const Text('Join contest'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _isVotingActive(
-                                      items![index]['voting_start_date'],
-                                      items![index]['voting_end_date'])
-                                  ? const Color.fromARGB(255, 230, 74, 63)
-                                  : const Color.fromARGB(255, 230, 74, 63)
-                                      .withOpacity(0.5),
+                              backgroundColor:
+                                  _isJoinActive(items![index]['submit_date'])
+                                      ? const Color.fromARGB(255, 77, 152, 189)
+                                      : const Color.fromARGB(255, 40, 84, 106)
+                                          .withOpacity(0.5),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 17, vertical: 7),
-                              textStyle: const TextStyle(fontSize: 14),
+                                  horizontal: 12, vertical: 7),
+                              textStyle: const TextStyle(fontSize: 12),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                            )),
-                      ],
-                    ),
-                  ],
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                              onPressed: () {
+                                if (_isVotingActive(
+                                    items![index]['voting_start_date'],
+                                    items![index]['voting_end_date'])) {
+                                  //If voting is active, navigate to the HomeScreen
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ContestParticipantsScreen(
+                                        contestName: items![index]['title'],
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  // If voting is not active, show the error snackbar
+                                  showErrorSnackbar(
+                                      'You can\'t vote, pay attention to the time');
+                                }
+                              },
+                              icon: const Icon(Icons.ballot, color: Colors.white),
+                              label: const Text('Vote'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _isVotingActive(
+                                        items![index]['voting_start_date'],
+                                        items![index]['voting_end_date'])
+                                    ? const Color.fromARGB(255, 230, 74, 63)
+                                    : const Color.fromARGB(255, 230, 74, 63)
+                                        .withOpacity(0.5),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 17, vertical: 7),
+                                textStyle: const TextStyle(fontSize: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              )),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
           ],

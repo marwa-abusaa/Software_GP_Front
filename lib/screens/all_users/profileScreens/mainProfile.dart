@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io'; // For File
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api/info.dart';
@@ -12,6 +13,7 @@ import 'package:flutter_application_1/widgets/custom_home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 class ProfileScreen extends StatefulWidget {
   final String emaill;
@@ -85,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _handleLogout(BuildContext context) async {
     await SharedPreferences.getInstance().then((prefs) => prefs.clear());
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('You have been logged out')),
+      const SnackBar(content: Text('You have been logged out'),duration: Duration(seconds: 1),),
     );
     Navigator.pushAndRemoveUntil(
       context,
@@ -125,12 +127,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.logout, color: ourPink, size: 33),
-                  onPressed: () {
-                    _handleLogout(context);
-                  },
-                ),
+                // IconButton(
+                //   icon: const Icon(Icons.logout, color: ourPink, size: 33),
+                //   onPressed: () {
+                //     _handleLogout(context);
+                //   },
+                // ),
               ],
             ),
           ),
@@ -194,7 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  PersonalInfoScreen(emaill: widget.emaill),
+                                  PersonalInfoScreen(emaill: widget.emaill, profileImage:_profileImageUrl! ),
                             ),
                           );
                         },
@@ -265,80 +267,220 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
 
                     const SizedBox(height: 16),
-                    if (_role == 'user')
-                      FutureBuilder(
-                        future: fetchSuperEmail(EMAIL),
-                        builder: (context, emailSnapshot) {
-                          if (emailSnapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          } else if (emailSnapshot.hasError ||
-                              !emailSnapshot.hasData ||
-                              emailSnapshot.data == null) {
-                            return const Center(
-                                child: Text(
-                                    'Unable to fetch supervisor information'));
-                          }
-
-                          final supervisorEmail = emailSnapshot.data as String;
-
-                          return FutureBuilder(
-                            future: getUserFullName(supervisorEmail),
-                            builder: (context, nameSnapshot) {
-                              if (nameSnapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const Center(
-                                    child: CircularProgressIndicator());
-                              } else if (nameSnapshot.hasError ||
-                                  !nameSnapshot.hasData ||
-                                  nameSnapshot.data == null) {
-                                return const Center(
-                                    child: Text(
-                                        'Unable to fetch supervisor name'));
-                              }
-
-                              final supervisorName =
-                                  nameSnapshot.data as String;
-
-                              return Card(
-                                color: logoBar,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                elevation: 5,
-                                child: ListTile(
-                                  leading:
-                                      const Icon(Icons.person, color: ourPink),
-                                  title: Text(
-                                    'My supervisor: $supervisorName',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15),
-                                  ),
-                                  //You can contact your supervisor for guidance
-                                  subtitle: Text(
-                                    '\n $supervisorEmail',
-                                  ),
-                                  trailing: const Icon(Icons.arrow_forward_ios),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            SupervisorInfoPage(
-                                          supervisorEmail: supervisorEmail,
-                                        ),
-                                      ),
-                                    );
+                    if(_role=="supervisor")
+                     SizedBox(height: 16,),
+                     if(_role=="supervisor")
+              Card(
+                color: logoBar,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 5,
+                child: ListTile(
+                  leading: const Icon(Icons.logout, color: ourPink),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  //subtitle: const Text('Edit password'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                   onTap: () {
+                        _handleLogout(context);
+                      },
+                ),
+              ),
+                   
+                     if(_role=="supervisor")
+                      SizedBox(height: 30,),
+                      if(_role=="supervisor")
+              Card(
+                color: logoBar,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 5,
+                child: ListTile(
+                  leading: const Icon(Icons.delete, color: ourPink),
+                  title: const Text(
+                    'Delete account',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15,color: Colors.red),
+                  ),
+                  //subtitle: const Text('Edit password'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () async {
+                        // عرض مربع حوار التأكيد قبل الحذف
+                        bool confirmDelete = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              //backgroundColor: offwhite,
+                              title:  Text('Confirm Delete',style: TextStyle(color:Colors.green[300])),
+                              content: const Text('Are you sure you want to delete your account?',style: TextStyle(fontSize: 17)),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Cancel',style: TextStyle(color:Colors.black)),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false); // إغلاق الحوار مع قيمة false
                                   },
                                 ),
-                              );
+                                TextButton(
+                                  child: const Text('Delete',style: TextStyle(color:Colors.red),),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(true); // إغلاق الحوار مع قيمة true
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        ) ?? false; 
+
+                        if (confirmDelete) {   
+
+                          await deleteUser(EMAIL);
+
+                          // إظهار رسالة تأكيد
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Account deleted successfully')),
+                          );
+                        }
+                      },
+                ),
+              ),
+                   if (_role == 'user')
+                    FutureBuilder(
+                      future: fetchSuperEmail(EMAIL),
+                      builder: (context, emailSnapshot) {
+                        if (emailSnapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        } else if (emailSnapshot.hasError || !emailSnapshot.hasData || emailSnapshot.data == null) {
+                          return const Center(child: Text('Unable to fetch supervisor information'));
+                        }
+
+                        final supervisorEmail = emailSnapshot.data as String;
+
+                          return FutureBuilder(
+                          future: getUserFullName(supervisorEmail),
+                          builder: (context, nameSnapshot) {
+                            if (nameSnapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
+                            } else if (nameSnapshot.hasError || !nameSnapshot.hasData || nameSnapshot.data == null) {
+                              return const Center(child: Text('Unable to fetch supervisor name'));
+                            }
+
+                            final supervisorName = nameSnapshot.data as String;
+
+                              return Column(
+            children: [
+              // First Card: Supervisor Info
+              Card(
+                color: logoBar,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 5,
+                child: ListTile(
+                  leading: const Icon(Icons.person, color: ourPink),
+                  title: Text(
+                    'My supervisor: $supervisorName',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  subtitle: Text('\n $supervisorEmail'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SupervisorInfoPage(supervisorEmail: supervisorEmail),
+                      ),
+                    );
+                  },
+                ),
+              ),
+               // Second Card: log out
+               SizedBox(height: 16,),
+              Card(
+                color: logoBar,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 5,
+                child: ListTile(
+                  leading: const Icon(Icons.logout, color: ourPink),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  //subtitle: const Text('Edit password'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                   onTap: () {
+                        _handleLogout(context);
+                      },
+                ),
+              ),
+                     SizedBox(height: 16,),
+              Card(
+                color: logoBar,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                elevation: 5,
+                child: ListTile(
+                  leading: const Icon(Icons.delete, color: ourPink),
+                  title: const Text(
+                    'Delete account',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15,color: Colors.red),
+                  ),
+                  //subtitle: const Text('Edit password'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () async {
+                        // عرض مربع حوار التأكيد قبل الحذف
+                        bool confirmDelete = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              //backgroundColor: offwhite,
+                              title:  Text('Confirm Delete',style: TextStyle(color:Colors.green[300])),
+                              content: const Text('Are you sure you want to delete your account?',style: TextStyle(fontSize: 17)),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Cancel',style: TextStyle(color:Colors.black)),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false); // إغلاق الحوار مع قيمة false
+                                  },
+                                ),
+                                TextButton(
+                                  child: const Text('Delete',style: TextStyle(color:Colors.red),),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(true); // إغلاق الحوار مع قيمة true
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        ) ?? false; 
+
+                        if (confirmDelete) {   
+
+                          await deleteUser(EMAIL);
+
+                          // إظهار رسالة تأكيد
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Account deleted successfully')),
+                          );
+                        }
+                      },
+                ),
+              ),
+            ],
+          );
+                              
                             },
                           );
                         },
                       ),
                     const SizedBox(height: 16),
+                
+                    
                   ],
                 ),
               ),
@@ -348,4 +490,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+  
+  ////delete user
+Future<void> deleteUser(String email) async {
+  const String apiUrl = myProfile; // استبدل بعنوان API الخاص بك
+
+  try {
+    var response = await http.delete(
+      Uri.parse(apiUrl),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email}),
+    );
+
+    if (response.statusCode == 200) {
+      print("Account deleted successfully");
+       Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => WelcomeScreen()),
+      (route) => false,
+    );
+    } else {
+      print("Failed to delete user: ${response.body}");
+    }
+  } catch (e) {
+    print("Error: $e");
+  }
+}
 }

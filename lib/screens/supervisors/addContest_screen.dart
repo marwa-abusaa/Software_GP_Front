@@ -265,7 +265,7 @@ class _AddCompetitionsScreenState extends State<AddCompetitionsScreen> {
                 Container(
                   width: MediaQuery.of(context).size.width,
                   color: ourPink,
-                  padding: const EdgeInsets.only(top: 8.0, bottom: 15.0),
+                  //padding: const EdgeInsets.only(top: 8.0, bottom: 2.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment
                         .spaceBetween, // Distributes space between children

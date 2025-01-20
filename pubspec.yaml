@@ -135,6 +135,8 @@ flutter:
     - assets/images/test.mp3
     - assets/images/winner.jpg
     - assets/images/adv_winner.png
+    - assets/images/marwa.jpeg
+    - assets/images/aya.jpeg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

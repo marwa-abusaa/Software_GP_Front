@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:flutter_application_1/screens/supervisors/courseDetails_screen.dart';
 import 'package:flutter_application_1/screens/users/allCoursesDetails_screen.dart';
-import 'package:flutter_application_1/screens/users/myStories_screen.dart';
 import 'package:flutter_application_1/widgets/custom_home.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:http/http.dart' as http;
@@ -80,7 +79,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     Navigator.of(context).pop(); // Navigate back to the previous page
                   },
                 ),
-                const SizedBox(width: 77.0), // Space between the icon and title
+                const SizedBox(width: 100.0), // Space between the icon and title
                 const Text(
                   'Courses',
                   textAlign: TextAlign.left,

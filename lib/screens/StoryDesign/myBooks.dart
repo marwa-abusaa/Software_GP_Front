@@ -127,8 +127,13 @@ class _BooksPageState extends State<MyBooksPage> {
         selectedTab == "on request" ? onRequest : denied;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Books'),
+        title: const Text(
+          'My Books',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: ourPink,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -136,13 +141,19 @@ class _BooksPageState extends State<MyBooksPage> {
 
           child: Column(
             children: [
+              SizedBox(
+                height: 15,
+              ),
               // Published Books Section
               Container(
                 padding: const EdgeInsets.all(8.0),
                 color: offwhite,
                 width: double.infinity,
                 child: const Text("My published books",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: ourBlue)),
               ),
               const SizedBox(height: 10),
               SizedBox(
@@ -162,15 +173,20 @@ class _BooksPageState extends State<MyBooksPage> {
                   },
                 ),
               ),
-
+              SizedBox(
+                height: 25,
+              ),
               // Only Me Books Section
               Container(
                 padding: const EdgeInsets.all(8.0),
                 color: offwhite,
                 width: double.infinity,
                 child: const Text(
-                  "Only Me Books",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  "Only My Books",
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: ourBlue),
                 ),
               ),
               const SizedBox(height: 10),
@@ -266,7 +282,7 @@ class _BooksPageState extends State<MyBooksPage> {
                                           builder: (context) => PdfViewerScreen(
                                             pdfUrl: book['pdfLink'],
                                             title: book['name'],
-                                            author: book['author'],
+                                            author: ' ',
                                           ),
                                         ),
                                       );
@@ -320,7 +336,8 @@ class _BooksPageState extends State<MyBooksPage> {
             color: offwhite,
             width: double.infinity,
             child: Text(title,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 18, color: ourBlue)),
           ),
           Expanded(
             child: items.isEmpty

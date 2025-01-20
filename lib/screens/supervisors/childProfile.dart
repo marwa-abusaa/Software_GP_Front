@@ -3,6 +3,7 @@ import 'package:flutter_application_1/api/info.dart';
 import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:flutter_application_1/screens/books/BookService%20.dart';
+import 'package:flutter_application_1/screens/users/user_marks.dart';
 import 'package:flutter_application_1/widgets/bookCard.dart';
 
 class ChildProfilePage extends StatefulWidget {
@@ -16,6 +17,7 @@ class ChildProfilePage extends StatefulWidget {
 
 class _ChildProfilePageState extends State<ChildProfilePage> {
   List<dynamic> publishedBooks = [];
+  late String userName;
   @override
   void initState() {
     super.initState();
@@ -76,6 +78,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
       backgroundColor: logoBar,
       appBar: AppBar(
         backgroundColor: ourPink,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: getUserProgress(widget.email), // Fetching user progress
@@ -114,6 +117,7 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                       if (userSnapshot.hasData) {
                         final userImage = userSnapshot.data!['image']!;
                         final fullName = userSnapshot.data!['name']!;
+                        userName = fullName;
 
                         return Column(
                           children: [
@@ -149,15 +153,39 @@ class _ChildProfilePageState extends State<ChildProfilePage> {
                       child: Card(
                         color: offwhite,
                         child: ListTile(
-                          title: const Text("User Progress"),
+                          title: const Text(
+                            "User Progress",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, color: ourPink),
+                          ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                  "Created Stories: ${userProgress['createdStroryNum']}"),
-                              Text("Contests: ${userProgress['contestsNum']}"),
-                              Text("Courses: ${userProgress['coursesNum']}"),
-                              Text("Points: ${userProgress['points']}"),
+                                  "• Created Stories: ${userProgress['createdStroryNum']}"),
+                              Text(
+                                  "• Contests: ${userProgress['contestsNum']}"),
+                              Text("• Courses: ${userProgress['coursesNum']}"),
+                              SizedBox(
+                                height: 7,
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => UserGrades(
+                                            childEmail: widget.email,
+                                            namee: userName)),
+                                  );
+                                },
+                                child: const Text('Show Grades'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: ourBlue, // لون زر السابق
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 2),
+                                ),
+                              ),
                             ],
                           ),
                         ),

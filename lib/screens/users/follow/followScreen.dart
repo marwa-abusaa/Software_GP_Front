@@ -275,10 +275,15 @@ class _UsersPageState extends State<UsersPage> {
         backgroundColor: logoBar,
         appBar: AppBar(
           backgroundColor: ourPink,
-          title: const Text("Users"),
+          title: const Text("Users",style: TextStyle(color: Colors.white),),
+         iconTheme: const IconThemeData(color: Colors.white),
+
           bottom: const TabBar(
+            labelColor: Colors.black, 
+            unselectedLabelColor: Colors.white,
+            indicatorColor: Colors.black,
             tabs: [
-              Tab(text: "All Users"),
+              Tab(text: "All Users",),
               Tab(text: "Followings"),
               Tab(text: "Followers"),
             ],

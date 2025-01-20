@@ -27,7 +27,7 @@ import 'package:matrix_gesture_detector/matrix_gesture_detector.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 //speech to text
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-
+import 'package:flutter_application_1/screens/admin/adminservices.dart';
 
 class PageComponent {
   String type; // 'text' or 'image'
@@ -219,11 +219,26 @@ class _EditorPageState extends State<EditorPage>
   bool isPlaying = false;
   String? audioPath;
   bool showSaveButton = false;
+  late List<String> bookCategories;
+  bool isLoading = true; // Track the loading state
+
+  Future<void> initializeCategories() async {
+    try {
+      // Fetch categories from the database
+      bookCategories = await fetchCategories();
+    } catch (e) {
+      print('Failed to fetch categories: $e');
+    } finally {
+      setState(() {
+        isLoading = false; // Update loading state
+      });
+    }
+  }
 
   //speech to text
-    stt.SpeechToText _speech = stt.SpeechToText();
+  stt.SpeechToText _speech = stt.SpeechToText();
 
-   // تهيئة speech_to_text
+  // تهيئة speech_to_text
   Future<void> _initSpeech() async {
     bool available = await _speech.initialize();
     if (!available) {
@@ -234,15 +249,15 @@ class _EditorPageState extends State<EditorPage>
     }
   }
 
-   void _startListening() {
+  void _startListening() {
     _speech.listen(
       onResult: (result) {
         setState(() {
           enteredText = result.recognizedWords;
           _controller.text = result.recognizedWords; // تحديث النص في TextField
-        _controller.selection = TextSelection.fromPosition(
-          TextPosition(offset: _controller.text.length),
-        );
+          _controller.selection = TextSelection.fromPosition(
+            TextPosition(offset: _controller.text.length),
+          );
         });
       },
       listenMode: stt.ListenMode.dictation, // ضبط الوضع للاستماع المستمر
@@ -253,7 +268,7 @@ class _EditorPageState extends State<EditorPage>
   }
 
   //voice for fierbase
-  String pdfID='';
+  String pdfID = '';
 
   Future<String> uploadCoverImage(Uint8List image) async {
     try {
@@ -278,71 +293,69 @@ class _EditorPageState extends State<EditorPage>
 
   ///فنكنشات الفويس
   Future<void> _startRecording() async {
-  final status = await Permission.microphone.request();
-  if (status.isGranted) {
-    //final path = 'audio_${DateTime.now().millisecondsSinceEpoch}.aac';
-    final directory = await getExternalStorageDirectory();
-    final filePath = '${directory!.path}/audio_${DateTime.now().millisecondsSinceEpoch}.aac';
-     setState(() {
-      audioPath = filePath;
-    });
-    
-    await _recorder!.startRecorder(toFile: filePath);
-    setState(() {
-      isRecording = true;
-    });
+    final status = await Permission.microphone.request();
+    if (status.isGranted) {
+      //final path = 'audio_${DateTime.now().millisecondsSinceEpoch}.aac';
+      final directory = await getExternalStorageDirectory();
+      final filePath =
+          '${directory!.path}/audio_${DateTime.now().millisecondsSinceEpoch}.aac';
+      setState(() {
+        audioPath = filePath;
+      });
 
-    //   // Upload to Firebase Storage
-    // if (audioPath != null) {
-    //   final audioUrl = await _uploadAudioToFirebase(audioPath!);
-    //   if (audioUrl != null) {
-    //     //String pdfId = await _savePdf();
-    //     await _saveAudioUrlToMongoDB(audioUrl, pdfID); // Replace "12345" with actual pdfId
-    //   }
-    // }
+      await _recorder!.startRecorder(toFile: filePath);
+      setState(() {
+        isRecording = true;
+      });
 
-
-  } else {
-    // Handle permission denial
-  }
-}
-
-
-Future<String?> _uploadAudioToFirebase(String filePath) async {
-  try {
-    final fileName = filePath.split('/').last;
-    final ref = FirebaseStorage.instance.ref().child('audioRecords/$fileName');
-    final uploadTask = ref.putFile(File(filePath));
-    final snapshot = await uploadTask;
-    final url = await snapshot.ref.getDownloadURL();
-    return url;
-  } catch (e) {
-    print('Error uploading audio: $e');
-    return null;
-  }
-}
-
-Future<void> _saveAudioUrlToMongoDB(String audioUrl, String pdfId) async {
-  try {
-    final response = await http.post(
-      Uri.parse(addRecorde), // Replace with your backend URL
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "pdfId": pdfId,
-        "url": audioUrl,
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      print('Audio URL saved to MongoDB');
+      //   // Upload to Firebase Storage
+      // if (audioPath != null) {
+      //   final audioUrl = await _uploadAudioToFirebase(audioPath!);
+      //   if (audioUrl != null) {
+      //     //String pdfId = await _savePdf();
+      //     await _saveAudioUrlToMongoDB(audioUrl, pdfID); // Replace "12345" with actual pdfId
+      //   }
+      // }
     } else {
-      print('Error saving URL to MongoDB: ${response.body}');
+      // Handle permission denial
     }
-  } catch (e) {
-    print('Error saving URL to MongoDB: $e');
   }
-}
 
+  Future<String?> _uploadAudioToFirebase(String filePath) async {
+    try {
+      final fileName = filePath.split('/').last;
+      final ref =
+          FirebaseStorage.instance.ref().child('audioRecords/$fileName');
+      final uploadTask = ref.putFile(File(filePath));
+      final snapshot = await uploadTask;
+      final url = await snapshot.ref.getDownloadURL();
+      return url;
+    } catch (e) {
+      print('Error uploading audio: $e');
+      return null;
+    }
+  }
+
+  Future<void> _saveAudioUrlToMongoDB(String audioUrl, String pdfId) async {
+    try {
+      final response = await http.post(
+        Uri.parse(addRecorde), // Replace with your backend URL
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "pdfId": pdfId,
+          "url": audioUrl,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        print('Audio URL saved to MongoDB');
+      } else {
+        print('Error saving URL to MongoDB: ${response.body}');
+      }
+    } catch (e) {
+      print('Error saving URL to MongoDB: $e');
+    }
+  }
 
 // Future<void> _stopRecording() async {
 //   await _recorder!.stopRecorder();
@@ -351,59 +364,57 @@ Future<void> _saveAudioUrlToMongoDB(String audioUrl, String pdfId) async {
 //   });
 // }
 
-Future<void> _stopRecording() async {
-  if (isRecording) {
-    try {
-      await _recorder!.stopRecorder();
-      setState(() {
-        isRecording = false;
-      });
+  Future<void> _stopRecording() async {
+    if (isRecording) {
+      try {
+        await _recorder!.stopRecorder();
+        setState(() {
+          isRecording = false;
+        });
 
-      if (audioPath != null) {
-        print('Recording saved at: $audioPath');
-        final audioUrl = await _uploadAudioToFirebase(audioPath!);
-        if (audioUrl != null) {
-          print('Audio uploaded to Firebase: $audioUrl');
-           await _saveAudioUrlToMongoDB(audioUrl, pdfID);
+        if (audioPath != null) {
+          print('Recording saved at: $audioPath');
+          final audioUrl = await _uploadAudioToFirebase(audioPath!);
+          if (audioUrl != null) {
+            print('Audio uploaded to Firebase: $audioUrl');
+            await _saveAudioUrlToMongoDB(audioUrl, pdfID);
+          } else {
+            print('Failed to upload audio');
+          }
         } else {
-          print('Failed to upload audio');
+          print('Audio path is null');
         }
-      } else {
-        print('Audio path is null');
+      } catch (e) {
+        print('Error stopping recorder: $e');
       }
-    } catch (e) {
-      print('Error stopping recorder: $e');
     }
   }
-}
 
+  Future<void> _playRecording() async {
+    if (audioPath != null) {
+      await _player!.startPlayer(fromURI: audioPath);
+      setState(() {
+        isPlaying = true;
+        showSaveButton = true; // إخفاء زر الحفظ أثناء التشغيل
+      });
+      _player!.onProgress!.listen((e) {
+        if (e.position.inMilliseconds >= e.duration.inMilliseconds) {
+          setState(() {
+            isPlaying = false;
+            showSaveButton = true; // إظهار زر الحفظ عند انتهاء التشغيل
+          });
+        }
+      });
+    }
+  }
 
-Future<void> _playRecording() async {
-  if (audioPath != null) {
-    await _player!.startPlayer(fromURI: audioPath);
+  Future<void> _stopPlayback() async {
+    await _player!.stopPlayer();
     setState(() {
-      isPlaying = true;
-      showSaveButton = true; // إخفاء زر الحفظ أثناء التشغيل
-    });
-    _player!.onProgress!.listen((e) {
-      if (e.position.inMilliseconds >= e.duration.inMilliseconds) {
-        setState(() {
-          isPlaying = false;
-          showSaveButton = true; // إظهار زر الحفظ عند انتهاء التشغيل
-        });
-      }
+      isPlaying = false;
+      showSaveButton = false;
     });
   }
-}
-
-Future<void> _stopPlayback() async {
-  await _player!.stopPlayer();
-  setState(() {
-    isPlaying = false;
-    showSaveButton = false;
-  });
-}
-
 
   ///خلصت فنكشنات الفويس
 
@@ -629,15 +640,6 @@ Future<void> _stopPlayback() async {
   ///
   Future<void> sendToSuper(BuildContext context) async {
     TextEditingController descriptionController = TextEditingController();
-    final List<String> categories = [
-      'Science',
-      'Poetry',
-      'History',
-      'Psychology',
-      'Fiction',
-      'self-help',
-      'novels',
-    ];
 
     // Show the dialog to input the description
     showDialog(
@@ -645,105 +647,98 @@ Future<void> _stopPlayback() async {
       barrierDismissible: false, // Prevent dismissal by tapping outside
       builder: (BuildContext context) {
         String selectedCategory =
-            categories[0]; // Default category is 'All Categories'
+            bookCategories[0]; // Default category is 'All Categories'
 
-        return AlertDialog(
-          title: const Text('Sending Story to Supervisor'),
-          content: SingleChildScrollView(
-            // Add a scroll view to handle overflow
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Be aware that when you send to supervisor, it will also be saved as a draft and downloaded as a PDF.',
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text('Sending Story to Supervisor'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Be aware that when you send to supervisor, it will also be saved as a draft and downloaded as a PDF.',
+                    ),
+                    TextField(
+                      controller: descriptionController,
+                      decoration:
+                          const InputDecoration(hintText: 'Enter description'),
+                      maxLines: null,
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Select Category',
+                        style: TextStyle(fontSize: 16)),
+                    const SizedBox(height: 10),
+                    DropdownButton<String>(
+                      value: selectedCategory,
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            selectedCategory =
+                                newValue; // Update the selected value
+                          });
+                        }
+                      },
+                      items: bookCategories
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
-                TextField(
-                  controller: descriptionController,
-                  decoration:
-                      const InputDecoration(hintText: 'Enter description'),
-                  maxLines: null, // Allow multiple lines for description
-                ),
-                const SizedBox(
-                    height:
-                        20), // Add spacing between the text field and dropdown
-                // Label for the category dropdown
-                const Text('Select Category', style: TextStyle(fontSize: 16)),
-                const SizedBox(height: 10), // Space between label and dropdown
-                DropdownButton<String>(
-                  value: selectedCategory,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedCategory = newValue!;
-                    });
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
                   },
-                  items:
-                      categories.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    String description = descriptionController.text;
+
+                    // Close the dialog
+                    Navigator.of(context).pop();
+
+                    // Proceed with sending the story
+                    if (description.isNotEmpty) {
+                      String draftId = await saveDraft(APIS.user!.uid, pages,
+                          _bookTitle, _backgroundColor.toString());
+
+                      String pdfId = await _savePdf();
+
+                      Uint8List coverImage = capturedImages.first;
+
+                      // Upload the cover image to Firebase Storage
+                      String coverImageUrl = await uploadCoverImage(coverImage);
+
+                      // Send the book with the description, draftId, and selected category
+                      await registerBook(_bookTitle, description, coverImageUrl,
+                          pdfId, draftId, APIS.mySuperEmail, selectedCategory);
+
+                      pdfID = pdfId;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Story sent to supervisor!')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Description cannot be empty')),
+                      );
+                    }
+                  },
+                  child: const Text('Send'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog without sending
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                String description = descriptionController.text;
-
-                // Close the dialog
-                Navigator.of(context).pop();
-
-                // Get the selected category like this:
-                String category = selectedCategory;
-
-                // Proceed with sending the story
-                if (description.isNotEmpty) {
-                  String draftId = await saveDraft(APIS.user!.uid, pages,
-                      _bookTitle, _backgroundColor.toString());
-
-                  String pdfId = await _savePdf();
-
-                  Uint8List coverImage = capturedImages.first;
-
-                  // Upload the cover image to Firebase Storage
-                  String coverImageUrl = await uploadCoverImage(coverImage);
-                  // Send the book with the description, draftId, and selected category
-                  await registerBook(
-                      _bookTitle,
-                      description,
-                      coverImageUrl,
-                      pdfId,
-                      draftId,
-                      APIS.mySuperEmail,
-                      category); // Pass the selected category
-                      
-                       setState(() {
-                          pdfID=pdfId ;
-                        });
-
-                  // Optionally, show a confirmation message or proceed to download as PDF
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Story sent to supervisor!')),
-                  );
-                } else {
-                  // If the description is empty, show a warning
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Description cannot be empty')),
-                  );
-                }
-              },
-              child: const Text('Send'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -759,9 +754,10 @@ Future<void> _stopPlayback() async {
     _player!.openPlayer();
 
     //speech to text
-     _initSpeech();
+    _initSpeech();
 
     fillImageCategories();
+    initializeCategories();
     // أضف مفتاحًا للصفحة الأولى عند بدء التطبيق
     if (widget.draft != null) {
       _tabController = TabController(length: 2, vsync: this); // لإنشاء الترويسة
@@ -974,7 +970,7 @@ Future<void> _stopPlayback() async {
       }
 
       // حفظ الملف
-      final pdfBytes = await document.save();    
+      final pdfBytes = await document.save();
 
 // Define the Firebase path
       final firebasePath =
@@ -986,14 +982,13 @@ Future<void> _stopPlayback() async {
       // الحصول على الرابط المباشر للـ PDF
       final downloadUrl = await storageRef.getDownloadURL();
 
-       
       // تنزيل الـ PDF إلى جهاز المستخدم
       await _downloadPdf(downloadUrl);
 
       // عرض نافذة منبثقة بعد حفظ ورفع الـ PDF بنجاح
 
       ScaffoldMessenger.of(context).showSnackBar(
-         const SnackBar(
+        const SnackBar(
             content: Text('Storybook saved, uploaded, and downloaded!')),
       );
       return downloadUrl;
@@ -1423,7 +1418,7 @@ Future<void> _stopPlayback() async {
                                                   width: MediaQuery.of(context)
                                                           .size
                                                           .width *
-                                                      0.9,
+                                                      1.2,
                                                   height: MediaQuery.of(context)
                                                           .size
                                                           .height *
@@ -1457,7 +1452,7 @@ Future<void> _stopPlayback() async {
                                   if (_showDeleteButton)
                                     Positioned(
                                         top: 540,
-                                        left: 150,
+                                        left: 170,
                                         child: Center(
                                           child: Container(
                                             height: 50,
@@ -1692,13 +1687,16 @@ Future<void> _stopPlayback() async {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                            Transform.translate(
-                                              offset: Offset(240, 0),
-                                              child: IconButton(
-                                                 icon: Icon( Icons.volume_up,size: 25, ),
-                                                 onPressed: _startListening,
+                                          Transform.translate(
+                                            offset: Offset(240, 0),
+                                            child: IconButton(
+                                              icon: Icon(
+                                                Icons.volume_up,
+                                                size: 25,
                                               ),
+                                              onPressed: _startListening,
                                             ),
+                                          ),
                                           TextField(
                                             controller: _controller,
                                             onChanged: (value) async {
@@ -1710,7 +1708,8 @@ Future<void> _stopPlayback() async {
                                               await _checkForErrors1(value);
                                             },
                                             decoration: const InputDecoration(
-                                              hintText: "Write your text or speak it",
+                                              hintText:
+                                                  "Write your text or speak it",
                                               border: OutlineInputBorder(),
                                             ),
                                             style: getTextStyle(),
@@ -1829,12 +1828,14 @@ Future<void> _stopPlayback() async {
                                             icon: const Icon(Icons.psychology,
                                                 size: 30),
                                             onPressed: () {
-                                               Navigator.push(
+                                              Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
                                                     builder: (context) =>
-                                                        AiTextToImageGenerator(onImageUploaded:
-                                                              fillImageCategories,) // Pass the function reference)
+                                                        AiTextToImageGenerator(
+                                                          onImageUploaded:
+                                                              fillImageCategories,
+                                                        ) // Pass the function reference)
                                                     ),
                                               );
                                             },
@@ -2171,7 +2172,7 @@ Future<void> _stopPlayback() async {
 
                 // زر فتح الشريط الجانبي
                 Positioned(
-                  left: 10,
+                  left: -4,
                   top: 10,
                   child: IconButton(
                     icon: const Icon(Icons.menu),
@@ -2184,144 +2185,148 @@ Future<void> _stopPlayback() async {
         ],
       ),
       bottomNavigationBar: BottomAppBar(
-  child: Padding(
-    padding: const EdgeInsets.all(0.0),
-    child: Container(
-      width: 100, // تحديد العرض المطلوب
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Transform.translate(
-            offset: Offset(-10, 0),
+        child: Padding(
+          padding: const EdgeInsets.all(0.0),
+          child: Container(
+            width: 100, // تحديد العرض المطلوب
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                IconButton(
-                  icon: Icon(isRecording ? Icons.stop : Icons.mic),
-                  tooltip: isRecording ? 'Stop Recording' : 'Start Recording',
-                  onPressed: isRecording ? _stopRecording : _startRecording,
-                ),
                 Transform.translate(
-                  offset: Offset(-8, 0),
-                  child: IconButton(
-                    icon: Icon(isPlaying ? Icons.stop : Icons.play_arrow),
-                    tooltip: isPlaying ? 'Stop Playback' : 'Play Recording',
-                    onPressed: isPlaying ? _stopPlayback : _playRecording,
+                  offset: Offset(-10, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      IconButton(
+                        icon: Icon(isRecording ? Icons.stop : Icons.mic),
+                        tooltip:
+                            isRecording ? 'Stop Recording' : 'Start Recording',
+                        onPressed:
+                            isRecording ? _stopRecording : _startRecording,
+                      ),
+                      Transform.translate(
+                        offset: Offset(-8, 0),
+                        child: IconButton(
+                          icon: Icon(isPlaying ? Icons.stop : Icons.play_arrow),
+                          tooltip:
+                              isPlaying ? 'Stop Playback' : 'Play Recording',
+                          onPressed: isPlaying ? _stopPlayback : _playRecording,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 24, // حجز مساحة ثابتة لزر الحفظ
+                        child: Visibility(
+                          visible: showSaveButton, // التحكم في ظهور الزر
+                          child: Transform.translate(
+                            offset: Offset(-13, 0),
+                            child: IconButton(
+                              icon: Icon(Icons.save),
+                              tooltip: 'Save Recording',
+                              onPressed: () {
+                                // Function to save the audio
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Recording saved!')),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(
-                  width: 24, // حجز مساحة ثابتة لزر الحفظ
-                  child: Visibility(
-                    visible: showSaveButton, // التحكم في ظهور الزر
-                    child: Transform.translate(
-                      offset: Offset(-13, 0),
-                      child: IconButton(
-                        icon: Icon(Icons.save),
-                        tooltip: 'Save Recording',
-                        onPressed: () {
-                          // Function to save the audio
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Recording saved!')),
+                IconButton(
+                  icon: const Icon(Icons.undo),
+                  onPressed: () {
+                    if (history.isNotEmpty) {
+                      setState(() {
+                        final lastComponent = history.removeLast();
+                        redoHistory
+                            .add(lastComponent); // إضافة العنصر إلى redoHistory
+                        pages[currentPageIndex]
+                            .components
+                            .remove(lastComponent);
+                      });
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.redo),
+                  onPressed: () {
+                    if (redoHistory.isNotEmpty) {
+                      setState(() {
+                        final redoComponent = redoHistory.removeLast();
+                        history.add(redoComponent); // إعادة العنصر إلى history
+                        pages[currentPageIndex].components.add(redoComponent);
+                      });
+                    }
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _confirmClearPageContent(context); // استدعاء دالة التأكيد
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {
+                    if (pages.length > 1) {
+                      // عرض نافذة تأكيد قبل الحذف
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text(
+                                'Are you sure you want to delete this page?'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () {
+                                  // إغلاق النافذة بدون حذف الصفحة
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('No'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  // حذف الصفحة إذا تم الضغط على "نعم"
+                                  setState(() {
+                                    pages.removeAt(currentPageIndex);
+                                    _pageKeys.removeAt(currentPageIndex);
+                                    currentPageIndex = currentPageIndex > 0
+                                        ? currentPageIndex - 1
+                                        : 0;
+                                    redoHistory
+                                        .clear(); // تنظيف redoHistory عند حذف صفحة
+                                  });
+                                  _pageController.jumpToPage(currentPageIndex);
+                                  Navigator.of(context)
+                                      .pop(); // إغلاق نافذة التأكيد بعد الحذف
+                                },
+                                child: const Text('Yes'),
+                              ),
+                            ],
                           );
                         },
-                      ),
-                    ),
-                  ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Cannot delete the last page!')),
+                      );
+                    }
+                  },
                 ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: _addPage,
+                ),
+                // داخل كود EditorPage
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.undo),
-            onPressed: () {
-              if (history.isNotEmpty) {
-                setState(() {
-                  final lastComponent = history.removeLast();
-                  redoHistory.add(lastComponent); // إضافة العنصر إلى redoHistory
-                  pages[currentPageIndex].components.remove(lastComponent);
-                });
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.redo),
-            onPressed: () {
-              if (redoHistory.isNotEmpty) {
-                setState(() {
-                  final redoComponent = redoHistory.removeLast();
-                  history.add(redoComponent); // إعادة العنصر إلى history
-                  pages[currentPageIndex].components.add(redoComponent);
-                });
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.clear),
-            onPressed: () {
-              _confirmClearPageContent(context); // استدعاء دالة التأكيد
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              if (pages.length > 1) {
-                // عرض نافذة تأكيد قبل الحذف
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text(
-                          'Are you sure you want to delete this page?'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            // إغلاق النافذة بدون حذف الصفحة
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('No'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // حذف الصفحة إذا تم الضغط على "نعم"
-                            setState(() {
-                              pages.removeAt(currentPageIndex);
-                              _pageKeys.removeAt(currentPageIndex);
-                              currentPageIndex = currentPageIndex > 0
-                                  ? currentPageIndex - 1
-                                  : 0;
-                              redoHistory
-                                  .clear(); // تنظيف redoHistory عند حذف صفحة
-                            });
-                            _pageController.jumpToPage(currentPageIndex);
-                            Navigator.of(context)
-                                .pop(); // إغلاق نافذة التأكيد بعد الحذف
-                          },
-                          child: const Text('Yes'),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Cannot delete the last page!')),
-                );
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _addPage,
-          ),
-          // داخل كود EditorPage
-        ],
+        ),
       ),
-    ),
-  ),
-),
-
-      
     );
   }
 }

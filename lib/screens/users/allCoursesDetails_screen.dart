@@ -254,7 +254,7 @@ Widget build(BuildContext context) {
                           Expanded(
                             child: Text(
                               '$title', // العنوان
-                              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold,color: ourBlue,fontFamily: 'Times New Roman',fontStyle: FontStyle.italic,
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: ourBlue,fontFamily: 'Times New Roman',fontStyle: FontStyle.italic,
                               decoration: TextDecoration.underline,decorationColor:ourBlue),
                             ),
                           ),
@@ -292,14 +292,14 @@ Widget build(BuildContext context) {
                                   text: 'Description: ', // This part will have the first color
                                   style: GoogleFonts.arvo().copyWith(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 23,
+                                    fontSize: 21,
                                     color: ourPink, // Specify the color here
                                   ),
                                   //TextStyle( color: ourPink,fontWeight: FontWeight.w900,fontSize: 23), // Change to your desired color
                                 ),
                                 TextSpan(
                                   text: '$description', // This part will have the second color
-                                  style: const TextStyle(fontSize: 22, color: Colors.black,fontFamily: 'Times New Roman'), // Change to your desired color
+                                  style: const TextStyle(fontSize: 20, color: Colors.black,fontFamily: 'Times New Roman'), // Change to your desired color
                                 ),
                               ],
                             ),
@@ -316,14 +316,14 @@ Widget build(BuildContext context) {
                                   text: 'Course Type: ', // This part will have the first color
                                   style: GoogleFonts.arvo().copyWith(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 23,
+                                    fontSize: 21,
                                     color: ourPink, // Specify the color here
                                   ),
                                   //TextStyle( color: ourPink,fontWeight: FontWeight.w900,fontSize: 23), // Change to your desired color
                                 ),
                                 TextSpan(
                                   text: '$courseType', // This part will have the second color
-                                  style: const TextStyle(fontSize: 22, color: Colors.black,fontFamily: 'Times New Roman'), // Change to your desired color
+                                  style: const TextStyle(fontSize: 20, color: Colors.black,fontFamily: 'Times New Roman'), // Change to your desired color
                                 ),
                               ],
                             ),
@@ -340,14 +340,14 @@ Widget build(BuildContext context) {
                                   text: 'Spervisor: ', // This part will have the first color
                                   style: GoogleFonts.arvo().copyWith(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 23,
+                                    fontSize: 21,
                                     color: ourPink, // Specify the color here
                                   ),
                                   //TextStyle( color: ourPink,fontWeight: FontWeight.w900,fontSize: 23), // Change to your desired color
                                 ),
                                 TextSpan(
                                   text: '$supervisorName', // This part will have the second color
-                                  style: const TextStyle(fontSize: 22, color: Colors.black,fontFamily: 'Times New Roman'),// Change to your desired color
+                                  style: const TextStyle(fontSize: 20, color: Colors.black,fontFamily: 'Times New Roman'),// Change to your desired color
                                 ),
                               ],
                             ),
@@ -364,14 +364,14 @@ Widget build(BuildContext context) {
                                   text: 'Score: ', // This part will have the first color
                                   style: GoogleFonts.arvo().copyWith(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 23,
+                                    fontSize: 21,
                                     color: ourPink, // Specify the color here
                                   ),
                                   //TextStyle( color: ourPink,fontWeight: FontWeight.w900,fontSize: 23), // Change to your desired color
                                 ),
                                 TextSpan(
                                   text: '$score', // This part will have the second color
-                                  style: const TextStyle(fontSize: 22, color: Colors.black,fontFamily: 'Times New Roman'),// Change to your desired color
+                                  style: const TextStyle(fontSize: 20, color: Colors.black,fontFamily: 'Times New Roman'),// Change to your desired color
                                 ),
                               ],
                             ),
@@ -388,14 +388,14 @@ Widget build(BuildContext context) {
                                   text: 'Go to course:                                 ', // This part will have the first color
                                   style: GoogleFonts.arvo().copyWith(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 23,
+                                    fontSize: 21,
                                     color: ourPink, // Specify the color here
                                   ),
                                   //TextStyle( color: ourPink,fontWeight: FontWeight.w900,fontSize: 23), // Change to your desired color
                                 ),
                                 TextSpan(
                                   text: '$link', // This part will have the second color
-                                  style: const TextStyle(fontSize: 22, color: Color.fromARGB(255, 23, 127, 211),fontFamily: 'Times New Roman',decoration: TextDecoration.underline),
+                                  style: const TextStyle(fontSize: 20, color: Color.fromARGB(255, 23, 127, 211),fontFamily: 'Times New Roman',decoration: TextDecoration.underline),
                                  recognizer: TapGestureRecognizer()
                                  ..onTap = () {
                                    final Uri url = Uri.parse(link);
@@ -513,7 +513,7 @@ Widget build(BuildContext context) {
                         if(!isAttempt){
                           Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => AttemptQuiz(id:courseId)),
+                          MaterialPageRoute(builder: (context) => AttemptQuiz(id:courseId, contScore: int.parse(score))),
                          );
                         }else{
                         showDialog(

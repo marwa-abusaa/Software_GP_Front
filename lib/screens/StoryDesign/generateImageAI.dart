@@ -192,6 +192,7 @@ Widget build(BuildContext context) {
       title: const Text("AI Image Generator", style: TextStyle(color: Colors.white),),
       backgroundColor: ourPink,
       centerTitle: true, // Center the title
+       iconTheme: const IconThemeData(color: Colors.white),
     ),
     backgroundColor: offwhite,
     body: Center(

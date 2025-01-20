@@ -8,6 +8,7 @@ import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_application_1/screens/admin/adminservices.dart';
 
 class AddBookPage extends StatefulWidget {
   @override
@@ -22,18 +23,30 @@ class _AddBookPageState extends State<AddBookPage> {
   File? _imageFile;
   File? _pdfFile;
   final ImagePicker _picker = ImagePicker();
+  bool isLoading = true; // Track the loading state
 
   // Category values
   String? _selectedCategory;
-  final List<String> _categories = [
-    'Science',
-    'Poetry',
-    'History',
-    'Psychology',
-    'Fiction',
-    'Self-help',
-    'Novels'
-  ];
+  List<String>? _categories;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeCategories();
+  }
+
+  Future<void> initializeCategories() async {
+    try {
+      // Fetch categories from the database
+      _categories = await fetchCategories();
+    } catch (e) {
+      print('Failed to fetch categories: $e');
+    } finally {
+      setState(() {
+        isLoading = false; // Update loading state
+      });
+    }
+  }
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -62,7 +75,7 @@ class _AddBookPageState extends State<AddBookPage> {
           _selectedCategory != null) {
         // Upload image to Firebase Storage
         String imageFileName =
-            DateTime.now().millisecondsSinceEpoch.toString() + "_cover.jpg";
+            "${DateTime.now().millisecondsSinceEpoch}_cover.jpg";
         Reference imageStorageRef =
             APIS.storage.ref().child("book_covers/$imageFileName");
         await imageStorageRef.putFile(_imageFile!);
@@ -70,7 +83,7 @@ class _AddBookPageState extends State<AddBookPage> {
 
         // Upload PDF to Firebase Storage
         String pdfFileName =
-            DateTime.now().millisecondsSinceEpoch.toString() + "_book.pdf";
+            "${DateTime.now().millisecondsSinceEpoch}_book.pdf";
         Reference pdfStorageRef =
             APIS.storage.ref().child("book_pdfs/$pdfFileName");
         await pdfStorageRef.putFile(_pdfFile!);
@@ -169,8 +182,13 @@ class _AddBookPageState extends State<AddBookPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Book'),
+        title: const Text(
+          'Add Book',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: ourPink,
+        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -262,7 +280,7 @@ class _AddBookPageState extends State<AddBookPage> {
         }
         return null;
       },
-      items: _categories.map((String category) {
+      items: _categories?.map((String category) {
         return DropdownMenuItem<String>(
           value: category,
           child: Text(category),

@@ -77,79 +77,104 @@ class _SupervisorChildrenPageState extends State<SupervisorChildrenPage> {
   @override
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: logoBar,
-      appBar: AppBar(
-        title: const Text("My Students"),
-        backgroundColor: ourPink,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(50.0),
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      if (value.isEmpty) {
+    return GestureDetector(
+       onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: logoBar,
+        appBar: AppBar(
+          title: const Text("My Students",style: TextStyle(color: Colors.white),),
+          backgroundColor: ourPink,
+          iconTheme: const IconThemeData(color: Colors.white),
+      
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(74.0),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  if (value.isEmpty) {
+                    setState(() {
+                      _isSearching = false;
+                      _searchResults = [];
+                    });
+                  }
+                },
+                onSubmitted: _searchChildren,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Search children...',
+                  hintStyle: const TextStyle(color: Colors.white70),
+                  prefixIcon: const Icon(Icons.search, color: Colors.white,),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                      color: Colors.white, // لون الإطار عند عدم التركيز
+                      width: 1.0, // سمك الإطار
+                    ),
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(
+                      color: Colors.white, // لون الإطار عند التركيز
+                      width: 2.0, // سمك الإطار
+                    ),
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  
+                ),
+              ),
+      
+                  ),
+                  if (_isSearching)
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
                         setState(() {
                           _isSearching = false;
+                          _searchController.clear();
                           _searchResults = [];
                         });
-                      }
-                    },
-                    onSubmitted: _searchChildren,
-                    decoration: InputDecoration(
-                      hintText: 'Search children...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                      ),
+                      },
                     ),
-                  ),
-                ),
-                if (_isSearching)
-                  IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      setState(() {
-                        _isSearching = false;
-                        _searchController.clear();
-                        _searchResults = [];
-                      });
-                    },
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
-      body: Column(
-        children: [
-          // Display search results at the top of the list
-          if (_isSearching) _buildSearchResults(),
-
-          // Display the list of children
-          Expanded(
-            child: FutureBuilder<List<Map<String, String>>>(
-              future: _childrenFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text("No children found."));
-                }
-
-                final children = snapshot.data!;
-                return _buildChildrenList(children);
-              },
+        body: Column(
+          children: [
+            // Display search results at the top of the list
+            if (_isSearching) _buildSearchResults(),
+      
+            // Display the list of children
+            Expanded(
+              child: FutureBuilder<List<Map<String, String>>>(
+                future: _childrenFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text("Error: ${snapshot.error}"));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text("No children found."));
+                  }
+      
+                  final children = snapshot.data!;
+                  return _buildChildrenList(children);
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

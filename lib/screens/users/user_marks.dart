@@ -7,7 +7,8 @@ import 'package:flutter_application_1/constants/app_colors.dart';
 
 class UserGrades extends StatefulWidget {
   final String childEmail;
-  UserGrades({required this.childEmail,Key? key, }) : super(key: key);
+  late String namee;
+  UserGrades({required this.childEmail, required this.namee,Key? key, }) : super(key: key);
 
   @override
   _UserGradesState createState() => _UserGradesState();
@@ -15,9 +16,11 @@ class UserGrades extends StatefulWidget {
 
 class _UserGradesState extends State<UserGrades> {
   late String childEmail=widget.childEmail;
+  late String username=widget.namee;
   //String email=EMAIL;
   List? items;
   bool isAscending = true; 
+  late String namee;
 
    @override
   void initState() {
@@ -82,13 +85,15 @@ void sortItems(String criteria) {
         var jsonResponse = jsonDecode(response.body);
         items = jsonResponse['success'];
         print('items: ${items}');
-        setState(() {});
-          ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content:  Text('email: $email'),
-      duration: const Duration(seconds: 1), // Set custom duration
-    ),
-  );
+        setState(() {
+          namee=items![0]['userName'];
+        });
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //   SnackBar(
+  //     content:  Text('email: $namee'),
+  //     duration: const Duration(seconds: 1), // Set custom duration
+  //   ),
+  // );
     } else {
         print('Error: ${response.statusCode}');
         print('Response: ${response.body}');
@@ -100,7 +105,7 @@ void sortItems(String criteria) {
     return Scaffold(
       backgroundColor: offwhite, // Purple background
       appBar: AppBar(
-      title: Text('My Grades', style: TextStyle(color: Colors.white)),
+      title: Text('Grades', style: TextStyle(color: Colors.white)),
       backgroundColor: ourPink,
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: Colors.white), // Change the icon color here
@@ -124,7 +129,7 @@ void sortItems(String criteria) {
                     padding: const EdgeInsets.fromLTRB(15, 5, 10, 0),
                      child: Center(
                        child: Text(
-                        items==null? '':'${items![0]['userName']}',
+                        username,
                         style: const TextStyle(
                           color: ourBlue,
                           fontSize: 24,

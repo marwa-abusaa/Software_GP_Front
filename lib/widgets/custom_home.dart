@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -10,10 +11,11 @@ import 'package:flutter_application_1/screens/supervisors/childRequests.dart';
 import 'package:flutter_application_1/screens/supervisors/supervisor_home_screen.dart';
 import 'package:flutter_application_1/screens/users/follow/followScreen.dart';
 import 'package:flutter_application_1/screens/users/home_screen.dart';
-import 'package:flutter_application_1/screens/users/myStories_screen.dart';
 import 'package:flutter_application_1/screens/all_users/profileScreens/mainProfile.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:flutter_application_1/config.dart';
+import 'package:http/http.dart' as http;
+
 
 class CustomHomePage extends StatefulWidget {
   late String emaill;
@@ -30,11 +32,59 @@ class CustomHomePage extends StatefulWidget {
 }
 
 class _CustomHomePageState extends State<CustomHomePage> {
+
+  Map<String, dynamic>? userScores;
+  int? totalPoints;
+
+  Future<void> fetchTotal() async {
+    try {
+      final response = await http.post(
+        Uri.parse('$child/totalScore'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': EMAIL}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          setState(() {
+            totalPoints = data['total'];
+          });
+        }
+      } else {
+        print('Failed to fetch total: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching total: $e');
+    }
+  }
+
+  Future<void> fetchUserScores() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$child?email=$EMAIL'),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == true) {
+          setState(() {
+            userScores = data['data'];
+          });
+        }
+      } else {
+        print('Failed to fetch user profile: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching user profile: $e');
+    }
+  }
   //late String email_token;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    fetchUserScores(); 
+    fetchTotal();
     // Map<String,dynamic> jwtDecodedToken = JwtDecoder.decode(widget.token);
     // email_token = jwtDecodedToken['email'];
   }
@@ -45,6 +95,9 @@ class _CustomHomePageState extends State<CustomHomePage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        if (userScores == null){
+            return const Center(child: CircularProgressIndicator());
+        }
         return Dialog(
           backgroundColor: offwhite,
           shape: RoundedRectangleBorder(
@@ -67,9 +120,9 @@ class _CustomHomePageState extends State<CustomHomePage> {
                   const SizedBox(height: 10),
 
                   // "Score : 10"
-                  const Text(
-                    'Score: 10',
-                    style: TextStyle(
+                   Text(
+                    'Score: $totalPoints',
+                    style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: score),
@@ -77,7 +130,7 @@ class _CustomHomePageState extends State<CustomHomePage> {
                   const SizedBox(height: 28),
 
                   // Star icon and text
-                  const Row(
+                   Row(
                     children: [
                       Icon(Icons.star, color: score),
                       SizedBox(width: 10),
@@ -98,7 +151,7 @@ class _CustomHomePageState extends State<CustomHomePage> {
                             // Start of children TextSpan
                             TextSpan(
                               text:
-                                  '5', // The number (5) that will have a different style
+                                  userScores!['createdStroryNum'].toString(), // The number (5) that will have a different style
                               style: const TextStyle(
                                   color:
                                       score, // Change the color of the number to red
@@ -114,45 +167,9 @@ class _CustomHomePageState extends State<CustomHomePage> {
                   const Divider(),
 
                   // Second entry
-                  const Row(
+                   Row(
                     children: [
-                      Icon(Icons.star, color: Colors.yellow),
-                      SizedBox(width: 10),
-                      // Text.rich allows for multiple text styles
-                      Text.rich(
-                        // Start of Text.rich for styled text
-                        TextSpan(
-                          // Start of TextSpan
-                          text: 'Read Stories: ', // Text before the number
-                          style: const TextStyle(
-                              color: Color.fromARGB(255, 111, 111, 111),
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              fontFamily:
-                                  'Times New Roman'), // Default text style
-                          children: <TextSpan>[
-                            // Start of children TextSpan
-                            TextSpan(
-                              text:
-                                  '5', // The number (5) that will have a different style
-                              style: const TextStyle(
-                                  color:
-                                      score, // Change the color of the number to red
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18 // Make the number bold
-                                  ),
-                            ),
-                          ], // End of children TextSpan
-                        ), // End of TextSpan
-                      ), // End of
-                    ],
-                  ),
-                  const Divider(),
-
-                  // Third entry
-                  const Row(
-                    children: [
-                      Icon(Icons.star, color: Colors.yellow),
+                      Icon(Icons.star, color: score),
                       SizedBox(width: 10),
                       // Text.rich allows for multiple text styles
                       Text.rich(
@@ -170,7 +187,43 @@ class _CustomHomePageState extends State<CustomHomePage> {
                             // Start of children TextSpan
                             TextSpan(
                               text:
-                                  '5', // The number (5) that will have a different style
+                                  userScores!['coursesNum'].toString(), // The number (5) that will have a different style
+                              style: const TextStyle(
+                                  color:
+                                      score, // Change the color of the number to red
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18 // Make the number bold
+                                  ),
+                            ),
+                          ], // End of children TextSpan
+                        ), // End of TextSpan
+                      ), // End of
+                    ],
+                  ),
+                  const Divider(),
+
+                  // Third entry
+                   Row(
+                    children: [
+                      Icon(Icons.star, color: score),
+                      SizedBox(width: 10),
+                      // Text.rich allows for multiple text styles
+                      Text.rich(
+                        // Start of Text.rich for styled text
+                        TextSpan(
+                          // Start of TextSpan
+                          text: 'Courses Score: ', // Text before the number
+                          style: const TextStyle(
+                              color: Color.fromARGB(255, 111, 111, 111),
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              fontFamily:
+                                  'Times New Roman'), // Default text style
+                          children: <TextSpan>[
+                            // Start of children TextSpan
+                            TextSpan(
+                              text:
+                                  userScores!['points'].toString(), // The number (5) that will have a different style
                               style: const TextStyle(
                                   color:
                                       score, // Change the color of the number to red
@@ -186,16 +239,16 @@ class _CustomHomePageState extends State<CustomHomePage> {
                   const Divider(),
 
                   // Fourth entry
-                  const Row(
+                   Row(
                     children: [
-                      Icon(Icons.star, color: Colors.yellow),
+                      Icon(Icons.star, color: score),
                       SizedBox(width: 10),
                       // Text.rich allows for multiple text styles
                       Text.rich(
                         // Start of Text.rich for styled text
                         TextSpan(
                           // Start of TextSpan
-                          text: 'Competitions Won: ', // Text before the number
+                          text: 'Competitions: ', // Text before the number
                           style: const TextStyle(
                               color: Color.fromARGB(255, 111, 111, 111),
                               fontSize: 14,
@@ -206,7 +259,7 @@ class _CustomHomePageState extends State<CustomHomePage> {
                             // Start of children TextSpan
                             TextSpan(
                               text:
-                                  '5', // The number (5) that will have a different style
+                                  userScores!['contestsNum'].toString(), // The number (5) that will have a different style
                               style: const TextStyle(
                                   color:
                                       score, // Change the color of the number to red
@@ -270,10 +323,10 @@ class _CustomHomePageState extends State<CustomHomePage> {
                         "user") // Display the score text only if role is "user"
                       const SizedBox(height: 2),
                     if (ROLE == "user")
-                      const Text(
-                        'Score: 0', // The text under the icon
-                        style: TextStyle(
-                          fontSize: 10,
+                      totalPoints==null? Text('') : Text(
+                         'Score: $totalPoints', // The text under the icon
+                        style: const TextStyle(
+                          fontSize: 13,
                           color: score, // Change the color as needed
                         ),
                       ),
@@ -287,7 +340,7 @@ class _CustomHomePageState extends State<CustomHomePage> {
 
       body: widget.body, backgroundColor: offwhite,
       // backgroundColor: offwhite,
-
+      resizeToAvoidBottomInset: false,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: SizedBox(
         width: 60.0, // Adjust the width as needed

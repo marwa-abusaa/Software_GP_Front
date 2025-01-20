@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api/api.dart';
+import 'package:flutter_application_1/constants/app_colors.dart';
 import 'package:flutter_application_1/screens/StoryDesign/storyServices/storyService.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -10,6 +11,7 @@ class AddImagePage extends StatefulWidget {
 }
 
 class _AddImagePageState extends State<AddImagePage> {
+  TextEditingController descriptionController = TextEditingController();
   File? _selectedImage;
   String? _category;
   String _description = '';
@@ -61,6 +63,17 @@ class _AddImagePageState extends State<AddImagePage> {
     final imageUrl = await uploadImage(_selectedImage!);
     if (imageUrl != null) {
       await addImage(imageUrl, _email, _description, _category!);
+
+      // Clear all fields
+      setState(() {
+        _selectedImage = null;
+        _category = null;
+        _description = '';
+        descriptionController.clear();
+      });
+
+      // Show success dialog
+      _showSuccessDialog();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to upload image')),
@@ -68,74 +81,145 @@ class _AddImagePageState extends State<AddImagePage> {
     }
   }
 
+  // Function to show the success dialog
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Success'),
+          content: const Text('Image added successfully!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Image'),
+        backgroundColor: ourPink,
+        title: const Text('Add New Image',
+            style: TextStyle(fontWeight: FontWeight.bold, color:Colors.white)),
+        elevation: 4,
+        iconTheme: const IconThemeData(color: Colors.white),
+         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Image picker
-            GestureDetector(
-              onTap: pickImage,
-              child: _selectedImage == null
-                  ? Container(
-                      height: 150,
-                      width: 150,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
+        padding: const EdgeInsets.all(20.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image picker
+              GestureDetector(
+                onTap: pickImage,
+                child: _selectedImage == null
+                    ? Container(
+                        height: 180,
+                        width: 180,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            const BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 8,
+                                offset: Offset(0, 4))
+                          ],
+                        ),
+                        child: const Icon(Icons.add_a_photo,
+                            size: 60, color: Colors.grey),
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          _selectedImage!,
+                          height: 180,
+                          width: 180,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                      child: const Icon(Icons.add_a_photo, size: 50),
-                    )
-                  : Image.file(
-                      _selectedImage!,
-                      height: 150,
-                      width: 150,
-                      fit: BoxFit.cover,
-                    ),
-            ),
-            const SizedBox(height: 16),
-
-            // Dropdown menu for category
-            DropdownButtonFormField<String>(
-              value: _category,
-              hint: const Text('Select Category'),
-              onChanged: (value) {
-                setState(() {
-                  _category = value;
-                });
-              },
-              items: _categories.map((category) {
-                return DropdownMenuItem(
-                  value: category,
-                  child: Text(category),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-
-            // Text field for description
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                border: OutlineInputBorder(),
               ),
-              onChanged: (value) {
-                _description = value;
-              },
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-            // Add Image button
-            ElevatedButton(
-              onPressed: handleAddImage,
-              child: const Text('Add Image'),
-            ),
-          ],
+              // Category dropdown
+              const Text(
+                'Select Category',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _category,
+                hint: const Text('Select Category'),
+                onChanged: (value) {
+                  setState(() {
+                    _category = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                ),
+                items: _categories.map((category) {
+                  return DropdownMenuItem(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+
+              // Description text field
+              const Text(
+                'Description',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: descriptionController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: 'Enter a description',
+                  border: const OutlineInputBorder(),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                ),
+                onChanged: (value) {
+                  _description = value;
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // Add Image button
+              Center(
+                child: ElevatedButton(
+                  onPressed: handleAddImage,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ourPink,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 30, vertical: 12),
+                    textStyle: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  child: const Text('Add Image'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

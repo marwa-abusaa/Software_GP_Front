@@ -128,14 +128,25 @@ class _AddCoursesScreenState extends State<AddCoursesScreen> {
           Container(
               width: MediaQuery.of(context).size.width,
               color: ourPink,
-              padding: const EdgeInsets.only(
-                  top: 8.0, bottom: 15.0),
-              child: const Column(
+              padding: const EdgeInsets.only( top: 8.0, bottom: 5.0),
+              child:  Row(
+                //mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Text(
-                    'My Courses',
-                    style:
-                        TextStyle(fontSize: 25.0, fontWeight: FontWeight.w500,color: Colors.white),
+                  IconButton(
+                        icon: const Icon(Icons.arrow_back,
+                            color: Colors.white), // Arrow icon
+                        onPressed: () {
+                          Navigator.of(context)
+                              .pop(); // Navigate back to the previous page
+                        },
+                      ),
+                  Transform.translate(
+                    offset: Offset(80, 0),
+                    child: const Text(
+                      'My Courses',
+                      style:
+                          TextStyle(fontSize: 25.0, fontWeight: FontWeight.w500,color: Colors.white),
+                    ),
                   ),
                 ],
               ),
@@ -165,10 +176,48 @@ class _AddCoursesScreenState extends State<AddCoursesScreen> {
                                   foregroundColor: Colors.white,
                                   icon: Icons.delete,
                                   label: 'Delete',
-                                  onPressed: (BuildContext context) {
-                                    print('${items![index]['_id']}');
-                                    deleteItem('${items![index]['_id']}');
+                                  onPressed: (BuildContext context) async{
+                        // عرض مربع حوار التأكيد قبل الحذف
+                        bool confirmDelete = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              //backgroundColor: offwhite,
+                              title:  Text('Confirm Delete',style: TextStyle(color:Colors.green[300])),
+                              content: const Text('Are you sure you want to delete your account?',style: TextStyle(fontSize: 17)),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Cancel',style: TextStyle(color:Colors.black)),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false); // إغلاق الحوار مع قيمة false
                                   },
+                                ),
+                                TextButton(
+                                  child: const Text('Delete',style: TextStyle(color:Colors.red),),
+                                  onPressed: () {
+                                    Navigator.of(context).pop(true); // إغلاق الحوار مع قيمة true
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        ) ?? false; 
+
+                        if (confirmDelete) {   
+                            print('${items![index]['_id']}');
+                           deleteItem('${items![index]['_id']}');
+                          //await deleteUser(EMAIL);
+
+                          // إظهار رسالة تأكيد
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Account deleted successfully')),
+                          );
+                        }
+                      },
+                                  // onPressed: (BuildContext context) {
+                                  //   print('${items![index]['_id']}');
+                                  //   deleteItem('${items![index]['_id']}');
+                                  // },
                                 ),
                               ],
                             ),
@@ -237,7 +286,7 @@ class _AddCoursesScreenState extends State<AddCoursesScreen> {
           borderRadius: BorderRadius.circular(20.0),
         ),
         child: Container(
-          height: 610,
+          height: 560,
           width: 700, // Set your desired width here
           child: SingleChildScrollView(  // Move SingleChildScrollView here
             child: Column(
@@ -247,7 +296,7 @@ class _AddCoursesScreenState extends State<AddCoursesScreen> {
                   padding: EdgeInsets.all(16.0),
                   child: Text(
                     'Add Course',
-                    style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: ourBlue),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: ourBlue),
                   ),
                 ),
                 TextField(
@@ -346,10 +395,10 @@ class _AddCoursesScreenState extends State<AddCoursesScreen> {
                     ),
                   ),
                 ).p4().px8(),
-                SizedBox(height: 3,),
+                SizedBox(height: 17,),
                 SizedBox(
                   height: 60,
-                  width: 150, // Set the width you want
+                  width: 140, // Set the width you want
                   child: ElevatedButton(                  
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ourBlue,

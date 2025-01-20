@@ -149,7 +149,7 @@ class _ChatScreenState extends State<ChatScreen> {
               // back button
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back, color: Colors.black54),
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
               ),
 
               // user profile picture
@@ -200,7 +200,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
-                            color: Colors.black87,
+                            color: Colors.white,
                           ),
                         );
                       } else {
@@ -210,7 +210,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
-                            color: Colors.black54,
+                            color: Colors.white,
                           ),
                         );
                       }
@@ -235,7 +235,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                     style: const TextStyle(
                       fontSize: 13,
-                      color: Colors.black54,
+                      color: Colors.white,
                     ),
                   ),
                 ],

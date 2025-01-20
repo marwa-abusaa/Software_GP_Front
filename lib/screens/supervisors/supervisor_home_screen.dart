@@ -30,6 +30,18 @@ class SupervisorHomeScreen extends StatefulWidget {
 class _SupervisorHomeScreenState extends State<SupervisorHomeScreen> {
   late String emaill;
   List? winners;
+//rating
+   int selectedRating = -1; // -1 means no rating selected
+  TextEditingController commentController = TextEditingController();
+
+  // List of ratings with colors
+  final List<Map<String, dynamic>> ratings = [
+    {'icon': Icons.sentiment_very_dissatisfied, 'label': 'Very Bad', 'color': Colors.red},
+    {'icon': Icons.sentiment_dissatisfied, 'label': 'Bad', 'color': Colors.orange},
+    {'icon': Icons.sentiment_neutral, 'label': 'Good', 'color': Colors.grey},
+    {'icon': Icons.sentiment_satisfied, 'label': 'Excellent', 'color': Colors.green},
+    {'icon': Icons.sentiment_very_satisfied, 'label': 'Amazing', 'color': Colors.blue},
+  ];
 
   Future<String?> _fetchUserProfile(String email) async {
   try {
@@ -432,10 +444,16 @@ bool _isAfterVoteDeadline(String finalDateStr) {
 
         // Second part - Grid of 4 square buttons
         Expanded(
-          flex: 1,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: GridView.count(
+           flex: 1,
+           child: Padding(
+             padding: const EdgeInsets.all(16),
+             child: SingleChildScrollView(
+               child: Column(
+          children: [
+            // وضع GridView هنا ضمن Column
+            GridView.count(
+              shrinkWrap: true, // لتحديد المساحة المطلوبة فقط
+              physics: NeverScrollableScrollPhysics(), 
               crossAxisCount: 2,
               crossAxisSpacing: 20.0,
               mainAxisSpacing: 20.0,
@@ -547,9 +565,336 @@ bool _isAfterVoteDeadline(String finalDateStr) {
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 40),
+            // بقية النصوص التي تظهر تحت الـ GridView
+         
+              Row(
+              children: [
+                Expanded(
+                  child: Divider(
+                    color: ourBlue,  // تحديد اللون
+                    thickness: 2,         // تحديد السمك
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    'About App',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: ourPink,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Divider(
+                    color: ourBlue,  // تحديد اللون
+                    thickness: 2,         // تحديد السمك
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
+            Transform.translate(
+              offset: Offset(0, 0),
+              child: Container(
+                padding: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  color: offwhite,
+                  border: Border.all(color: iconsBar,width: 2.0),
+                  borderRadius: BorderRadius.circular(8.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.7),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: Offset(3, 3),
+                    ),
+                  ],
+                ),
+                child: const Text(
+                   'An interactive platform designed to empower creativity and learning. The app allows users to create their own stories by dragging characters and illustrations into a customizable book format. It also offers a variety of competitions, courses, and quizzes to engage users and enhance their skills. With Tiny Tales, users can transform their imagination into shareable stories and contribute to a vibrant community of creators.',
+                  textAlign: TextAlign.justify,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Times New Roman',
+                  ),
+                ),
+              ),
+            ),
+            // بقية الأقسام والـ Row
+             const SizedBox(height: 40),
+            // بقية النصوص التي تظهر تحت الـ GridView
+         
+              Row(
+              children: [
+                Expanded(
+                  child: Divider(
+                    color: ourBlue,  // تحديد اللون
+                    thickness: 2,         // تحديد السمك
+                  ),
+                ),
+
+                Icon(Icons.star,
+                   color: Colors.yellow
+                  ),
+
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    'Rate App',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: ourPink,
+                    ),
+                  ),
+                ),
+                 Icon(Icons.star,
+                   color: Colors.yellow
+                  ),
+                const Expanded(
+                  child: Divider(
+                    color: ourBlue,  // تحديد اللون
+                    thickness: 2,         // تحديد السمك
+                  ),
+                ),
+              ],
+            ),
+               const SizedBox(height: 20),
+            GestureDetector(
+               onTap: (){
+            setState(() {
+              selectedRating = -1;
+            });
+          },
+              child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+              Text(
+                'Your Feedback',
+                style: TextStyle(fontSize: 18, color: const Color.fromARGB(255, 244, 193, 77)),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(ratings.length, (index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedRating = index; // Update selected rating
+                      });
+                    },
+                    child: Column(
+                      children: [
+                        Icon(
+                          ratings[index]['icon'],
+                          color: selectedRating == index
+                              ? ratings[index]['color']
+                              : Colors.grey,
+                          size: selectedRating == index ? 55 : 40, // Change size when selected
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          ratings[index]['label'],
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
+              SizedBox(height: 20),
+              if (selectedRating != -1) // Show the selected rating text
+                Text(
+                  ratings[selectedRating]['label'],
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              SizedBox(height: 10),
+              TextField(
+                controller: commentController,
+                decoration: InputDecoration(
+                  hintText: 'Write your comment here...',
+                  hintStyle: TextStyle(
+                    color: const Color.fromARGB(255, 103, 101, 101), // لون الـ hint text
+                    fontSize: 15, // حجم الـ hint text
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                      //color: const Color.fromARGB(255, 244, 193, 77), // لون الـ border الطبيعي
+                      width: 1.0, // سمك الـ border الطبيعي
+                    ),
+                  ),
+                ),
+                maxLines: 2,
+              )
+
+                      ],
+                 ),
+            ),
+            SizedBox(height: 20,),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            TextButton(
+              onPressed: () {
+                commentController.clear();
+                setState(() {
+                  selectedRating = -1;
+                });        
+              },
+              child: Text('Cancel',style: TextStyle(color: Colors.red),),
+            ),
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                backgroundColor: ourBlue,
+                fixedSize: Size(
+                 MediaQuery.of(context).size.width * 0.25,
+                 26,
+                ),
+                 padding: EdgeInsets.zero,
+              ),
+          onPressed: () {
+             commentController.clear();
+                setState(() {
+                  selectedRating = -1;
+                }); 
+                showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12), // الزوايا المستديرة
+                  ),
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.6, // تحديد العرض كنسبة من عرض الشاشة (60%)
+                    padding: EdgeInsets.all(20), // المسافات الداخلية داخل الـ Dialog
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.sentiment_very_satisfied, 
+                          color: Colors.yellow, 
+                          size: 40, 
+                        ),
+                        SizedBox(width: 10), 
+                        Text(
+                          'Thanks!',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.black, 
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ).then((value) {
+              // إزالة التركيز عن الـ TextField بعد إغلاق الـ Dialog
+              FocusScope.of(context).requestFocus(FocusNode());
+            });
+          },
+          
+          child: Text('Send',style: TextStyle(color: Colors.white)),
+          
         ),
-        //SizedBox(height: 50,)
+          ],
+        ),
+        
+      
+         const SizedBox(height: 40),
+            // بقية النصوص التي تظهر تحت الـ GridView
+         
+              Row(
+              children: [
+                Expanded(
+                  child: Divider(
+                    color: ourBlue,  // تحديد اللون
+                    thickness: 2,         // تحديد السمك
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    'Developers',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: ourPink,
+                    ),
+                  ),
+                ),
+                const Expanded(
+                  child: Divider(
+                    color: ourBlue,  // تحديد اللون
+                    thickness: 2,         // تحديد السمك
+                  ),
+                ),
+              ],
+            ),
+
+           
+            const SizedBox(height: 40),
+            Transform.translate(
+              offset: Offset(0, 0),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Column(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: AssetImage('assets/images/aya.jpeg'),
+                        radius: 40,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'ِAya Ba\'ara',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 67, 65, 65)),
+                      ),
+                       SizedBox(height: 8),
+                      Text(
+                        'ِayabaara4@gmail.com',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 101, 98, 98)),
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 20),
+                  Column(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: AssetImage('assets/images/marwa.jpeg'),
+                        radius: 40,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Marwa AbuSaa',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 67, 65, 65)),
+                      ),
+                       SizedBox(height: 8),
+                      Text(
+                        'marwaabusa3@gmail.com',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 101, 98, 98)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 30),
+          ],
+               ),
+             ),
+           ),
+         ),
       ]),
     );
   }

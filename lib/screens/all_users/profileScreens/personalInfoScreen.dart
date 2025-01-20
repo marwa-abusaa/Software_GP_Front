@@ -8,7 +8,8 @@ import 'package:intl/intl.dart';
 // ignore: must_be_immutable
 class PersonalInfoScreen extends StatefulWidget {
   late String emaill;
-  PersonalInfoScreen({required this.emaill, Key? key}) : super(key: key);
+  late String profileImage;
+  PersonalInfoScreen({required this.emaill, required this.profileImage,Key? key}) : super(key: key);
   @override
   _PersonalInfoScreenState createState() => _PersonalInfoScreenState();
 }
@@ -200,7 +201,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                   icon: Icon(
                     isEditing ? Icons.save : Icons.edit,
                     color: const Color(0xFFC96868),
-                    size: 50,
+                    size: 35,
                   ),
                   onPressed: toggleEdit,
                 ),
@@ -223,15 +224,17 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Center(
+                 Center(
                   child: CircleAvatar(
-                    radius: 40,
+                    radius: 50,
                     backgroundColor: Color(0xFFC96868),
-                    child: Icon(
-                      Icons.person,
-                      size: 50,
-                      color: Colors.white,
-                    ),
+                    backgroundImage: NetworkImage(widget.profileImage),
+                                            
+                    //  child: Icon(
+                    //   Icons.person,
+                    //   size: 50,
+                    //   color: Colors.white,
+                    // ),
                   ),
                 ),
                 const SizedBox(height: 20),

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api/api.dart';
 import 'package:flutter_application_1/config.dart';
+import 'package:flutter_application_1/screens/admin/homePage.dart';
 import 'package:flutter_application_1/screens/supervisors/supervisor_home_screen.dart';
 import 'package:flutter_application_1/screens/users/home_screen.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -77,7 +78,7 @@ class _SignInScreenState extends State<SignInScreen> {
           ROLE = role;
           prefs.setString('token', myToken);
           if (role == "user") {
-            await NotificationService.subscribeToTopic();
+            //await NotificationService.subscribeToTopic();
 
             Navigator.push(
               context,
@@ -87,13 +88,21 @@ class _SignInScreenState extends State<SignInScreen> {
                       )),
             );
           } else if (role == "supervisor") {
-            await NotificationService.unsubscribeFromTopic();
+            //await NotificationService.unsubscribeFromTopic();
 
             Navigator.push(
               context,
               MaterialPageRoute(
                   builder: (context) => SupervisorHomeScreen(
                         token: myToken,
+                      )),
+            );
+          }
+          else if(role=="admin"){
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => AdminHomePage(
                       )),
             );
           }

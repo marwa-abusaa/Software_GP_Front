@@ -160,8 +160,9 @@ class _ContestParticipantsScreenState extends State<ContestParticipantsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.contestName} participation'),
+        title: Text('${widget.contestName} participation',style: TextStyle(color: Colors.white,fontSize: 18)),
         backgroundColor: ourPink,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           if (!votingEnabled)
             TextButton(
@@ -182,7 +183,7 @@ class _ContestParticipantsScreenState extends State<ContestParticipantsScreen> {
               },
               child: const Text(
                 'Vote',
-                style: TextStyle(color: Colors.black),
+                style: TextStyle(color: Color.fromARGB(255, 122, 224, 226),fontWeight: FontWeight.bold,fontSize: 17),
               ),
             ),
         ],
@@ -303,6 +304,7 @@ class _ContestParticipantsScreenState extends State<ContestParticipantsScreen> {
                                                   });
                                                 }
                                               },
+                                              activeColor: ourBlue
                                             ),
                                             const Text('Vote for this book'),
                                           ],
@@ -326,9 +328,11 @@ class _ContestParticipantsScreenState extends State<ContestParticipantsScreen> {
       floatingActionButton: votingEnabled
           ? FloatingActionButton.extended(
               onPressed: saveVotes,
-              label: const Text('Save Votes'),
+              label: const Text('Save Votes',),
               icon: const Icon(Icons.save),
+              backgroundColor: ourPink,
             )
+            
           : null,
     );
   }

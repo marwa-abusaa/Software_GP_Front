@@ -1,11 +1,14 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/config.dart';
 import 'package:flutter_application_1/constants/app_colors.dart';
+import 'package:flutter_application_1/screens/supervisors/super.service.dart';
 import 'package:flutter_application_1/screens/users/quiz_screen.dart';
 
 class AttemptQuiz extends StatefulWidget {
   final String id;
-  AttemptQuiz({required this.id,Key? key}) : super(key: key);
+  final int contScore;
+  AttemptQuiz({required this.id,Key? key, required this.contScore}) : super(key: key);
   @override
   _AttemptQuizState createState() => _AttemptQuizState();
 }
@@ -38,7 +41,8 @@ class _AttemptQuizState extends State<AttemptQuiz> {
                 padding: EdgeInsets.all(9), // Remove padding
               ),
               onPressed: () {
-             
+                incrementCourse(EMAIL);
+                incrementPoints(EMAIL, widget.contScore);
                   Navigator.pop(context); // يغلق الحوار
                  Navigator.push(
                      context,

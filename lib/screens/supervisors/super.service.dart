@@ -259,7 +259,7 @@ Future<void> incrementContest(String email) async {
 
 Future<void> incrementCourse(String email) async {
   final Uri apiUrl =
-      Uri.parse('$child/story'); // Replace with your API endpoint
+      Uri.parse('$child/course'); // Replace with your API endpoint
 
   try {
     // Send POST request
@@ -286,3 +286,65 @@ Future<void> incrementCourse(String email) async {
     print('Error: $error');
   }
 }
+
+Future<void> incrementPoints(String email, int contestScore) async {
+  final Uri apiUrl =
+      Uri.parse('$child/points'); // Replace with your API endpoint
+
+  try {
+    // Send POST request
+    final response = await http.post(
+      apiUrl,
+      headers: {
+        'Content-Type': 'application/json', // Set the content type to JSON
+      },
+      body: json.encode({
+        'email': email, // Pass the email in the request body
+        "contestScore": contestScore
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Successfully incremented the story number
+      final responseData = json.decode(response.body);
+      print('Response: ${responseData['data']}');
+    } else {
+      // Handle error based on status code
+      final responseData = json.decode(response.body);
+      print('Error: ${responseData['error']}');
+    }
+  } catch (error) {
+    print('Error: $error');
+  }
+}
+
+
+// Future<void> getChildTotalScore(String email) async {
+//   final Uri apiUrl =
+//       Uri.parse('$child/totalScore'); // Replace with your API endpoint
+
+//   try {
+//     // Send POST request
+//     final response = await http.post(
+//       apiUrl,
+//       headers: {
+//         'Content-Type': 'application/json', // Set the content type to JSON
+//       },
+//       body: json.encode({
+//         'email': email, // Pass the email in the request body
+//       }),
+//     );
+
+//     if (response.statusCode == 200) {
+//       // Successfully incremented the story number
+//       final responseData = json.decode(response.body);
+//       print('Response: ${responseData['data']}');
+//     } else {
+//       // Handle error based on status code
+//       final responseData = json.decode(response.body);
+//       print('Error: ${responseData['error']}');
+//     }
+//   } catch (error) {
+//     print('Error: $error');
+//   }
+// }

@@ -35,8 +35,10 @@ class _BookRequestPageState extends State<BookRequestPage> {
     return Scaffold(
       backgroundColor: logoBar,
       appBar: AppBar(
-        title: const Text('Book Requests'),
+        title: const Text('Book Requests',style: TextStyle(color: Colors.white),),
         backgroundColor: ourPink,
+        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: true,
       ),
       body: FutureBuilder<List<dynamic>>(
         future: _books,
@@ -117,12 +119,12 @@ class _BookRequestPageState extends State<BookRequestPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.check),
+                                icon: const Icon(Icons.check,color: Colors.green,),
                                 onPressed: () =>
                                     _showCommentDialog(context, 'accept', book),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.close),
+                                icon: const Icon(Icons.close,color: Colors.red,),
                                 onPressed: () =>
                                     _showCommentDialog(context, 'deny', book),
                               ),
@@ -158,7 +160,7 @@ class _BookRequestPageState extends State<BookRequestPage> {
                 Navigator.pop(context);
                 _handleAction(action, book);
               },
-              child: const Text('Submit'),
+              child: const Text('Submit',style: TextStyle(color: ourPink),),
             ),
           ],
         );

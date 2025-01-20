@@ -74,11 +74,12 @@ class _ProgressTrackerPageState extends State<ProgressTrackerPage> {
       appBar: AppBar(
         title: const Text(
           'Progress Tracker',
-          style: TextStyle(color: ourPink),
+          style: TextStyle(color: Colors.black),
         ),
         backgroundColor: offwhite,
         iconTheme: const IconThemeData(color: ourPink),
         elevation: 0,
+        centerTitle: true,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())

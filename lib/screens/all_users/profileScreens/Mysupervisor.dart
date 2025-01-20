@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/api/info.dart';
+import 'package:flutter_application_1/constants/app_colors.dart';
 
 class SupervisorInfoPage extends StatefulWidget {
   final String supervisorEmail;
@@ -50,43 +51,49 @@ class _SupervisorInfoPageState extends State<SupervisorInfoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Supervisor Information'),
+        title: const Text('Supervisor Information',style: TextStyle(color: Colors.white),),
+         iconTheme: const IconThemeData(color: Colors.white),
+         backgroundColor: ourPink,
+         centerTitle: true,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  // Supervisor Image
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: supervisorImageUrl != null
-                        ? NetworkImage(supervisorImageUrl!)
-                        : null,
-                    backgroundColor: Colors.grey.shade200,
-                    child: supervisorImageUrl == null
-                        ? const Icon(Icons.person, size: 50)
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  // Supervisor Name
-                  Text(
-                    supervisorName ?? 'Name not available',
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  // Supervisor Email
-                  Text(
-                    widget.supervisorEmail,
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 20),
-                  // Optional: Add more details or actions here
-                ],
+          : Center(
+            child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    SizedBox(height: 20,),
+                    // Supervisor Image
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundImage: supervisorImageUrl != null
+                          ? NetworkImage(supervisorImageUrl!)
+                          : null,
+                      backgroundColor: Colors.grey.shade200,
+                      child: supervisorImageUrl == null
+                          ? const Icon(Icons.person, size: 50)
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    // Supervisor Name
+                    Text(
+                      supervisorName ?? 'Name not available',
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    // Supervisor Email
+                    Text(
+                      widget.supervisorEmail,
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 20),
+                    // Optional: Add more details or actions here
+                  ],
+                ),
               ),
-            ),
+          ),
     );
   }
 }
